@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Vannai Sri Santhi Sweets & Bakery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div>
+      <h1>Shop Admin</h1>
+      <div class="sub">Vannai Sri Santhi Sweets &amp; Bakery — editable dashboard</div>
+    </div>
+    <a class="preview-link" href="index.html" target="_blank">View Customer Site ↗</a>
+  </div>
+</header>
+
+<div class="notice">
+  <b>Demo note:</b> changes you save here are stored in this browser only, so you can test the full edit → save → see it live workflow. For changes to show up for every customer on every device, this needs to connect to a real database — happy to help set that up when you're ready to go live.
+</div>
+
+<div class="section">
+  <h2>Shop Details</h2>
+  <div class="desc">These appear in the header, hero banner and footer of your customer site.</div>
+  <div class="field-grid">
+    <div class="field"><label>Shop Address / City</label><input type="text" id="fCity" placeholder="Tirunelveli, Tamil Nadu"></div>
+    <div class="field"><label>Phone Number</label><input type="text" id="fPhone" placeholder="+91 98765 43210"></div>
+    <div class="field"><label>Opening Hours</label><input type="text" id="fHours" placeholder="Open daily · 8:00 AM – 9:30 PM"></div>
+    <div class="field"><label>Established Year</label><input type="text" id="fSince" placeholder="2004"></div>
+    <div class="field"><label>UPI ID (for customer payments)</label><input type="text" id="fUpi" placeholder="yourshop@ybl"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Site Photos</h2>
+  <div class="desc">Hero banner, story section, bulk/festival banner and the four category tiles.</div>
+  <div class="photo-grid" id="photoGrid"></div>
+</div>
+
+<div class="section">
+  <h2>Manage Products</h2>
+  <div class="desc">Edit names, prices, photos — mark bestsellers, add new items, or remove old ones.</div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabSweets" onclick="setTab('sweets')">Sweets</button>
+    <button class="tab-btn" id="tabSavouries" onclick="setTab('savouries')">Savouries</button>
+  </div>
+  <div id="itemsList"></div>
+  <button class="add-row-btn" onclick="addItem()">+ Add New Item</button>
+</div>
+
+<div class="section">
+  <h2>Customer Orders</h2>
+  <div class="desc">Orders customers submit after paying via UPI. Check your PhonePe app for the payment, then mark it here.</div>
+  <div id="ordersList"></div>
+</div>
+
+<div class="savebar">
+  <button class="btn-save" onclick="saveAll()">Save All Changes</button>
+  <span class="save-status" id="saveStatus"></span>
+</div>
+<div id="toastHost"></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>

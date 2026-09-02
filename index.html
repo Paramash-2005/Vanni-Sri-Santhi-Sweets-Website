@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vannai Sri Santhi Sweets & Bakery — Order Authentic Tirunelveli Sweets Online</title>
+<meta name="description" content="Order authentic Tirunelveli Halwa, Mixture, Balcova and more from Vannai Sri Santhi Sweets & Bakery — own-made since 2004, no preservatives, shipped across Tamil Nadu and all of India.">
+<meta name="keywords" content="Tirunelveli halwa, Tamil Nadu sweets online, Vannai Sri Santhi, sweet shop Tirunelveli, Indian sweets online, mixture, balcova, mysorepak">
+<meta property="og:title" content="Vannai Sri Santhi Sweets & Bakery — Authentic Tirunelveli Sweets">
+<meta property="og:description" content="Own-made sweets and savouries from Tirunelveli, Tamil Nadu, since 2004. Shipped fresh across Tamil Nadu and all of India.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+
+<div class="announce">Own-made Tirunelveli Halwa, Mixture &amp; Balcova · Courier across Tamil Nadu &amp; all of India</div>
+
+<header>
+  <div class="header-row wrap">
+    <button class="burger" onclick="alert('Mobile menu — hook up to your nav')">${''}</button>
+    <a class="logo" href="#top">
+      <div class="medallion" style="width:42px;height:42px;"><div class="inner" style="width:34px;height:34px;"><span class="serif" style="font-weight:800;font-size:11px;" id="sinceYearHeader">2004</span></div></div>
+      <div><div class="brand-en">Vannai Sri Santhi</div><div class="brand-ta ta">வண்ணை ஸ்ரீ சாந்தி</div></div>
+    </a>
+    <nav class="mainnav">
+      <a href="#categories">Sweets</a>
+      <a href="#categories">Savouries</a>
+      <a href="#bestsellers">Best Sellers</a>
+      <a href="#bulk">Bulk &amp; Gifting</a>
+      <a href="#story">About Us</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" title="Call us" id="callBtn" onclick="location.href='tel:+919876543210'"></button>
+      <button class="icon-btn" onclick="toggleDrawer(true)">
+        <span id="cartIconWrap"></span>
+        <span class="cart-count" id="cartCount" style="display:none;">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-inner wrap">
+    <div>
+      <div class="eyebrow" style="color:var(--gold-bright);" id="heroEyebrow">Est. 2004 · Tirunelveli, Tamil Nadu</div>
+      <h1>Excellence in Every Bite<br>of Heritage Sweets</h1>
+      <div class="ta">பாரம்பரிய இனிப்புகளின் சுவை</div>
+      <p>Vannai Sri Santhi Sweets &amp; Bakery has been hand-making Tirunelveli's favourite halwa, mixture and balcova since 2004 — fresh in-house, no shortcuts, no preservatives. Now shipping across Tamil Nadu and all of India.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-gold" href="#bestsellers">Shop Best Sellers</a>
+        <a class="btn btn-ghost" href="#bulk">Bulk &amp; Festival Orders</a>
+      </div>
+    </div>
+    <div>
+      <label class="photo-slot hero-photo arch">
+        <span class="hint" id="heroHint"></span>
+        <input type="file" accept="image/*" onchange="handlePhoto(event,'hero')">
+      </label>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Shop By Category</div>
+      <h2>What Are You Craving Today?</h2>
+      <div class="ta">இன்று என்ன வேண்டும்?</div>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</section>
+
+<section class="trust-strip">
+  <div class="wrap">
+    <div class="trust-grid" id="trustGrid"></div>
+  </div>
+</section>
+
+<section id="bestsellers">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Fresh Today</div>
+      <h2>Our Best Sellers</h2>
+      <div class="ta">பிரபலமான இனிப்புகள்</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabSweets" onclick="setTab('sweets')">Sweets · இனிப்பு</button>
+      <button class="tab-btn" id="tabSavouries" onclick="setTab('savouries')">Savouries · சிற்றுண்டி</button>
+    </div>
+    <div class="prod-grid" id="prodGrid"></div>
+  </div>
+</section>
+
+<section id="bulk">
+  <div class="wrap">
+    <div class="bulk-banner">
+      <div>
+        <div class="eyebrow" style="color:var(--gold-bright);">Weddings · Diwali · Corporate Gifting</div>
+        <h2>Celebrations, Crafted to Perfection</h2>
+        <p>Planning a wedding order or festival gifting box? Tell us the occasion and quantity — we'll prepare it fresh and pack it beautifully, own-made just like everything else at our counter.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-gold" href="#contact">Enquire Now</a>
+        </div>
+      </div>
+      <label class="photo-slot bulk-photo arch">
+        <span class="hint" id="bulkHint"></span>
+        <input type="file" accept="image/*" onchange="handlePhoto(event,'bulk')">
+      </label>
+    </div>
+  </div>
+</section>
+
+<section id="story">
+  <div class="wrap story">
+    <label class="photo-slot story-photo arch">
+      <span class="hint" id="storyHint"></span>
+      <input type="file" accept="image/*" onchange="handlePhoto(event,'story')">
+    </label>
+    <div>
+      <div class="eyebrow">Our Story</div>
+      <h2 class="serif">Two Decades of Tirunelveli's Own Sweets</h2>
+      <p>Since 2004, Vannai Sri Santhi Sweets &amp; Bakery has been a fixture on Tirunelveli's sweet counters — famous for our halwa, mixture and balcova, made fresh every single day in small batches. No shortcuts, no store-bought mixes, just recipes passed down and perfected over the years.</p>
+      <p>Today we ship our sweets and savouries across Tamil Nadu and all of India, so families far from home can still taste something made the way it always has been.</p>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="brand-en">Vannai Sri Santhi Sweets &amp; Bakery</div>
+        <p>Own-made sweets &amp; savouries from Tirunelveli, Tamil Nadu, since 2004. Courier across Tamil Nadu &amp; all-India shipping available.</p>
+        <div class="foot-social" id="footSocial"></div>
+      </div>
+      <div class="foot-col">
+        <h4>Our Range</h4>
+        <a href="#categories">Sweets</a><a href="#categories">Savouries</a><a href="#bulk">Bulk &amp; Gifting</a>
+      </div>
+      <div class="foot-col">
+        <h4>About</h4>
+        <a href="#story">Our Story</a><a href="#bulk">Wedding Orders</a><a href="#bulk">Corporate Gifting</a>
+      </div>
+      <div class="foot-col">
+        <h4>Get In Touch</h4>
+        <div id="footAddress">Tirunelveli, Tamil Nadu</div>
+        <div id="footPhone">+91 98765 43210</div>
+        <div id="footHours">Open daily · 8:00 AM – 9:30 PM</div>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="about-us.html">About Us</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a><a href="refund-policy.html">Refund &amp; Cancellation</a>
+      </div>
+    </div>
+    <div class="foot-bottom">© 2026 Vannai Sri Santhi Sweets &amp; Bakery. All Rights Reserved. · Prices shown are placeholders.</div>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay" onclick="toggleDrawer(false)"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3 class="serif">Your Basket</h3>
+    <button class="close-x" onclick="toggleDrawer(false)"></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot"></div>
+</div>
+<div id="toastHost"></div>
+
+<script src="js/site.js"></script>
+
+<!-- ===== AI Assistant (RAG demo) ===== -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat(true)">
+  <span id="chatFabIcon"></span>
+</button>
+<div class="overlay" id="chatOverlay" onclick="toggleChat(false)"></div>
+<div class="chat-drawer" id="chatDrawer">
+  <div class="drawer-head">
+    <div>
+      <h3 class="serif">Ask Vannai Sri Santhi</h3>
+      <div class="chat-sub">AI Assistant · RAG-powered</div>
+    </div>
+    <button class="close-x" onclick="toggleChat(false)"></button>
+  </div>
+  <div class="chat-log" id="chatLog">
+    <div class="msg bot">
+      <span class="chat-label">Assistant</span>
+      <div class="chat-bubble">Vanakkam! Ask me about our sweets, hours, shipping, or bulk orders — I'll answer from our shop's own records.</div>
+    </div>
+  </div>
+  <div class="chat-suggestions">
+    <div class="chat-chip" onclick="askChip(this)">What is Tirunelveli Halwa made of?</div>
+    <div class="chat-chip" onclick="askChip(this)">Do you ship outside Tamil Nadu?</div>
+    <div class="chat-chip" onclick="askChip(this)">Can I place a bulk order for a wedding?</div>
+  </div>
+  <div class="chat-composer">
+    <input type="text" id="userInput" placeholder="Ask about our sweets, orders, hours..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="btn-add" id="sendBtn" onclick="sendMessage()" style="flex:0 0 auto;padding:0 16px;">Ask</button>
+  </div>
+  <div class="kb-toggle"><button onclick="toggleKB()">📋 View knowledge base (what the AI retrieves from)</button></div>
+  <div id="kbPanel"></div>
+</div>
+
+<link rel="stylesheet" href="css/chat-widget.css">
+
+<script src="js/chat-widget.js"></script>
+</body>
+</html>
+
