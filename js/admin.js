@@ -30,7 +30,7 @@ const PHOTO_SLOTS = [
 ];
 
 let data = {
-  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 98765 43210', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'vannaisrisanthi@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery'},
+  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 98765 43210', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'vannaisrisanthi@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery', whatsapp:'+91 98765 43210', instagram:'https://www.instagram.com/vannai_sri_santhi_sweets', facebook:'https://facebook.com/vannaisrisanthi'},
   sweets: JSON.parse(JSON.stringify(DEFAULT_SWEETS)),
   savouries: JSON.parse(JSON.stringify(DEFAULT_SAVOURIES)),
   photos:{}
@@ -83,6 +83,9 @@ function saveAll(){
   data.shop.hours = document.getElementById('fHours').value || data.shop.hours;
   data.shop.since = document.getElementById('fSince').value || data.shop.since;
   data.shop.upi = document.getElementById('fUpi').value || data.shop.upi;
+  data.shop.whatsapp = document.getElementById('fWhatsapp').value || data.shop.whatsapp;
+  data.shop.instagram = document.getElementById('fInstagram').value || data.shop.instagram;
+  data.shop.facebook = document.getElementById('fFacebook').value || data.shop.facebook;
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     showToast('Saved! Open the customer site to see your changes.');
@@ -102,6 +105,9 @@ function fillShopForm(){
   document.getElementById('fHours').value = data.shop.hours;
   document.getElementById('fSince').value = data.shop.since;
   document.getElementById('fUpi').value = data.shop.upi || '';
+  document.getElementById('fWhatsapp').value = data.shop.whatsapp || '';
+  document.getElementById('fInstagram').value = data.shop.instagram || '';
+  document.getElementById('fFacebook').value = data.shop.facebook || '';
 }
 function renderPhotoGrid(){
   document.getElementById('photoGrid').innerHTML = PHOTO_SLOTS.map(p=>`

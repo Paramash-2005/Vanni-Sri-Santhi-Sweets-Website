@@ -24,7 +24,17 @@ document.querySelector('.close-x').innerHTML = icon('x',20);
 document.getElementById('heroHint').innerHTML = icon('camera',26)+'Add shop / product photo';
 document.getElementById('bulkHint').innerHTML = icon('camera',24)+'Add festival gifting photo';
 document.getElementById('storyHint').innerHTML = icon('camera',24)+'Add shopfront / kitchen photo';
-document.getElementById('footSocial').innerHTML = `<a href="#">${icon('instagram',14)}</a><a href="#">${icon('facebook',14)}</a><a href="#">${icon('whatsapp',14)}</a>`;
+function updateSocialLinks(){
+  const waDigits = SHOP_WHATSAPP.replace(/[^\d]/g,'');
+  const waMsg = encodeURIComponent("Hi! I'd like to enquire about a bulk/festival order.");
+  const waLink = `https://wa.me/${waDigits}?text=${waMsg}`;
+  document.getElementById('footSocial').innerHTML =
+    `<a href="${SHOP_INSTAGRAM}" target="_blank" rel="noopener" title="Instagram">${icon('instagram',14)}</a>` +
+    `<a href="${SHOP_FACEBOOK}" target="_blank" rel="noopener" title="Facebook">${icon('facebook',14)}</a>` +
+    `<a href="${waLink}" target="_blank" rel="noopener" title="WhatsApp">${icon('whatsapp',14)}</a>`;
+  const enquireBtn = document.getElementById('enquireBtn');
+  if(enquireBtn) enquireBtn.href = waLink;
+}
 
 /* ---------- DATA ---------- */
 let SWEETS = [
@@ -65,6 +75,9 @@ function loadSharedData(){
     if(s.hours) document.getElementById('footHours').textContent = s.hours;
     if(s.upi) SHOP_UPI = s.upi;
     if(s.nameEn) SHOP_NAME_FOR_UPI = s.nameEn;
+    if(s.whatsapp) SHOP_WHATSAPP = s.whatsapp;
+    if(s.instagram) SHOP_INSTAGRAM = s.instagram;
+    if(s.facebook) SHOP_FACEBOOK = s.facebook;
   }
   if(Array.isArray(data.sweets) && data.sweets.length) SWEETS = data.sweets;
   if(Array.isArray(data.savouries) && data.savouries.length) SAVOURIES = data.savouries;
@@ -88,6 +101,9 @@ const TRUST = [
 /* ---------- STATE ---------- */
 let SHOP_UPI = 'vannaisrisanthi@ybl';
 let SHOP_NAME_FOR_UPI = 'Vannai Sri Santhi Sweets';
+let SHOP_WHATSAPP = '+91 98765 43210';
+let SHOP_INSTAGRAM = 'https://www.instagram.com/vannai_sri_santhi_sweets';
+let SHOP_FACEBOOK = 'https://facebook.com/vannaisrisanthi';
 const ORDERS_KEY = 'vss_orders';
 function loadOrders(){ try{ return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }catch(e){ return []; } }
 function saveOrder(order){
@@ -299,6 +315,6 @@ function confirmPaid(){
   renderCartBadge();
   renderDrawer();
 }
-function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderDrawer(); }
+function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderDrawer(); updateSocialLinks(); }
 loadSharedData();
 renderAll();
