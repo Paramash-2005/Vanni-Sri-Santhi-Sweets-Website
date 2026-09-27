@@ -6,11 +6,13 @@ function toggleChat(open){
 }
 
 /* Proactively greet each new visit — opens once per browser session, and
-   never fires if the visitor has already opened or dismissed the chat. */
+   never fires if the visitor has already opened/dismissed the chat, or is
+   mid-checkout with the cart drawer open. */
 setTimeout(()=>{
   let interacted = false;
   try{ interacted = !!sessionStorage.getItem('vss_chat_interacted'); }catch(e){}
-  if(!interacted) toggleChat(true);
+  const cartOpen = document.getElementById('drawer').classList.contains('show');
+  if(!interacted && !cartOpen) toggleChat(true);
 }, 3000);
 
 /* ---- Knowledge base, reconciled with the shop's real policies/data ---- */

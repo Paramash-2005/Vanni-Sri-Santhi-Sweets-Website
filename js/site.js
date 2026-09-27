@@ -13,7 +13,9 @@ const ICON_PATHS = {
   clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
   instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
-  whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'
+  whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>'
 };
 function icon(name,size=18,sw=1.8){return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;}
 document.querySelector('.burger').innerHTML = icon('menu',22);
@@ -38,7 +40,6 @@ function closeMobileMenu(){
 document.querySelectorAll('.icon-btn')[0].innerHTML = icon('phone',20);
 document.getElementById('cartIconWrap').innerHTML = icon('cart',21);
 document.querySelector('.close-x').innerHTML = icon('x',20);
-document.getElementById('footSocial').innerHTML = `<a href="#">${icon('instagram',14)}</a><a href="#">${icon('whatsapp',14)}</a>`;
 
 /* ---------- DATA ---------- */
 let SWEETS = [
@@ -79,6 +80,8 @@ function loadSharedData(){
     if(s.hours) document.getElementById('footHours').textContent = s.hours;
     if(s.upi) SHOP_UPI = s.upi;
     if(s.nameEn) SHOP_NAME_FOR_UPI = s.nameEn;
+    if(s.whatsapp) SHOP_WHATSAPP = s.whatsapp;
+    if(s.instagram) SHOP_INSTAGRAM = s.instagram;
   }
   if(Array.isArray(data.sweets) && data.sweets.length) SWEETS = data.sweets;
   if(Array.isArray(data.savouries) && data.savouries.length) SAVOURIES = data.savouries;
@@ -106,6 +109,8 @@ function getTrust(){
 /* ---------- STATE ---------- */
 let SHOP_UPI = 'vannaisrisanthi@ybl';
 let SHOP_NAME_FOR_UPI = 'Vannai Sri Santhi Sweets';
+let SHOP_WHATSAPP = '+919443555772';
+let SHOP_INSTAGRAM = 'https://www.instagram.com/vannai_sri_santhi_sweets';
 const ORDERS_KEY = 'vss_orders';
 function loadOrders(){ try{ return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }catch(e){ return []; } }
 function saveOrder(order){
@@ -281,6 +286,16 @@ function buildUpiLink(amount){
   });
   return 'upi://pay?' + params.toString();
 }
+function buildWhatsappLink(text){
+  const digits = SHOP_WHATSAPP.replace(/[^0-9]/g,'');
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+function renderShopLinks(){
+  const social = document.getElementById('footSocial');
+  if(social) social.innerHTML = `<a href="${SHOP_INSTAGRAM}" target="_blank" rel="noopener">${icon('instagram',14)}</a><a href="${buildWhatsappLink('Hi '+SHOP_NAME_FOR_UPI+'! I had a question about your sweets.')}" target="_blank" rel="noopener">${icon('whatsapp',14)}</a>`;
+  const enquire = document.getElementById('enquireBtn');
+  if(enquire) enquire.href = buildWhatsappLink(`Hi ${SHOP_NAME_FOR_UPI}! I'd like to enquire about a bulk/wedding order.\nOccasion: \nApprox. quantity: `);
+}
 function goToPay(){
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
@@ -312,6 +327,6 @@ function renderSitePhotos(){
     if(el) el.innerHTML = photoFill(key);
   });
 }
-function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderDrawer(); }
+function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderShopLinks(); renderDrawer(); }
 loadSharedData();
 renderAll();
