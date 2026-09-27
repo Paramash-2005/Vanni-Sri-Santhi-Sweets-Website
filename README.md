@@ -64,6 +64,8 @@ Log into `yourdomain.com/admin.html` with the password from step 3, and fill in:
 - Real prices for every item
 - Real photos (shop front, products, hero banner)
 
+**About the product images:** every sweet/savoury currently shows an original illustrated icon (in `assets/products/`) instead of a real photo — small "Illustration" tag included so customers aren't misled. These are placeholders, not photos of your actual products. Replace each one with a real photo through admin.html as soon as you can; the illustration disappears automatically the moment a real photo is uploaded for that item.
+
 ### 7. One limitation to know about
 Admin changes currently save to whichever browser you used to edit them — they won't yet appear for customers visiting from other devices. For that, this needs a real shared database. It's the next thing to build when you're ready — ask any time.
 

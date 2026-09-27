@@ -30,7 +30,7 @@ const PHOTO_SLOTS = [
 ];
 
 let data = {
-  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 98765 43210', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'vannaisrisanthi@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery', whatsapp:'+91 98765 43210', instagram:'https://www.instagram.com/vannai_sri_santhi_sweets', facebook:'https://facebook.com/vannaisrisanthi'},
+  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 94435 55772', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'vannaisrisanthi@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery'},
   sweets: JSON.parse(JSON.stringify(DEFAULT_SWEETS)),
   savouries: JSON.parse(JSON.stringify(DEFAULT_SAVOURIES)),
   photos:{}
@@ -83,9 +83,6 @@ function saveAll(){
   data.shop.hours = document.getElementById('fHours').value || data.shop.hours;
   data.shop.since = document.getElementById('fSince').value || data.shop.since;
   data.shop.upi = document.getElementById('fUpi').value || data.shop.upi;
-  data.shop.whatsapp = document.getElementById('fWhatsapp').value || data.shop.whatsapp;
-  data.shop.instagram = document.getElementById('fInstagram').value || data.shop.instagram;
-  data.shop.facebook = document.getElementById('fFacebook').value || data.shop.facebook;
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     showToast('Saved! Open the customer site to see your changes.');
@@ -105,9 +102,6 @@ function fillShopForm(){
   document.getElementById('fHours').value = data.shop.hours;
   document.getElementById('fSince').value = data.shop.since;
   document.getElementById('fUpi').value = data.shop.upi || '';
-  document.getElementById('fWhatsapp').value = data.shop.whatsapp || '';
-  document.getElementById('fInstagram').value = data.shop.instagram || '';
-  document.getElementById('fFacebook').value = data.shop.facebook || '';
 }
 function renderPhotoGrid(){
   document.getElementById('photoGrid').innerHTML = PHOTO_SLOTS.map(p=>`
@@ -127,12 +121,18 @@ function handlePhoto(e,key){
 }
 function setTab(t){ tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderItems(); }
 function currentList(){ return tab==='sweets'?data.sweets:data.savouries; }
+const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
+function itemThumb(id){
+  if(data.photos[id]) return `<img src="${data.photos[id]}">`;
+  if(ILLUSTRATED_IDS.has(id)) return `<img src="assets/products/${id}.svg">`;
+  return '📷';
+}
 function renderItems(){
   const list = currentList();
   document.getElementById('itemsList').innerHTML = list.map((it,idx)=>`
     <div class="item-row">
       <label class="thumb-upload">
-        ${data.photos[it.id]?`<img src="${data.photos[it.id]}">`:'📷'}
+        ${itemThumb(it.id)}
         <input type="file" accept="image/*" onchange="handlePhoto(event,'${it.id}')">
       </label>
       <input type="text" value="${it.en}" placeholder="Name (English)" oninput="updateItem(${idx},'en',this.value)">

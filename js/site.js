@@ -13,28 +13,32 @@ const ICON_PATHS = {
   clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
   instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
-  facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
   whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>'
 };
 function icon(name,size=18,sw=1.8){return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;}
 document.querySelector('.burger').innerHTML = icon('menu',22);
+function toggleMobileMenu(){
+  const nav = document.getElementById('mobileNav');
+  const btn = document.getElementById('burgerBtn');
+  const open = !nav.classList.contains('show');
+  nav.classList.toggle('show', open);
+  btn.innerHTML = icon(open ? 'x' : 'menu', 22);
+  btn.setAttribute('aria-expanded', String(open));
+  btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+}
+function closeMobileMenu(){
+  const nav = document.getElementById('mobileNav');
+  if(!nav.classList.contains('show')) return;
+  nav.classList.remove('show');
+  const btn = document.getElementById('burgerBtn');
+  btn.innerHTML = icon('menu',22);
+  btn.setAttribute('aria-expanded','false');
+  btn.setAttribute('aria-label','Open menu');
+}
 document.querySelectorAll('.icon-btn')[0].innerHTML = icon('phone',20);
 document.getElementById('cartIconWrap').innerHTML = icon('cart',21);
 document.querySelector('.close-x').innerHTML = icon('x',20);
-document.getElementById('heroHint').innerHTML = icon('camera',26)+'Add shop / product photo';
-document.getElementById('bulkHint').innerHTML = icon('camera',24)+'Add festival gifting photo';
-document.getElementById('storyHint').innerHTML = icon('camera',24)+'Add shopfront / kitchen photo';
-function updateSocialLinks(){
-  const waDigits = SHOP_WHATSAPP.replace(/[^\d]/g,'');
-  const waMsg = encodeURIComponent("Hi! I'd like to enquire about a bulk/festival order.");
-  const waLink = `https://wa.me/${waDigits}?text=${waMsg}`;
-  document.getElementById('footSocial').innerHTML =
-    `<a href="${SHOP_INSTAGRAM}" target="_blank" rel="noopener" title="Instagram">${icon('instagram',14)}</a>` +
-    `<a href="${SHOP_FACEBOOK}" target="_blank" rel="noopener" title="Facebook">${icon('facebook',14)}</a>` +
-    `<a href="${waLink}" target="_blank" rel="noopener" title="WhatsApp">${icon('whatsapp',14)}</a>`;
-  const enquireBtn = document.getElementById('enquireBtn');
-  if(enquireBtn) enquireBtn.href = waLink;
-}
+document.getElementById('footSocial').innerHTML = `<a href="#">${icon('instagram',14)}</a><a href="#">${icon('whatsapp',14)}</a>`;
 
 /* ---------- DATA ---------- */
 let SWEETS = [
@@ -69,15 +73,12 @@ function loadSharedData(){
   try{ data = JSON.parse(raw); }catch(e){ return; }
   if(data.shop){
     const s = data.shop;
-    if(s.since) document.getElementById('sinceYearHeader').textContent = s.since;
+    if(s.since){ const el = document.getElementById('sinceYearHeader'); if(el) el.textContent = s.since; SHOP_SINCE = parseInt(s.since) || SHOP_SINCE; }
     if(s.city) { document.getElementById('heroEyebrow').textContent = `Est. ${s.since||'2004'} · ${s.city}`; document.getElementById('footAddress').textContent = s.city; }
     if(s.phone){ document.getElementById('footPhone').textContent = s.phone; document.getElementById('callBtn').setAttribute('onclick', `location.href='tel:${s.phone.replace(/\s/g,'')}'`); }
     if(s.hours) document.getElementById('footHours').textContent = s.hours;
     if(s.upi) SHOP_UPI = s.upi;
     if(s.nameEn) SHOP_NAME_FOR_UPI = s.nameEn;
-    if(s.whatsapp) SHOP_WHATSAPP = s.whatsapp;
-    if(s.instagram) SHOP_INSTAGRAM = s.instagram;
-    if(s.facebook) SHOP_FACEBOOK = s.facebook;
   }
   if(Array.isArray(data.sweets) && data.sweets.length) SWEETS = data.sweets;
   if(Array.isArray(data.savouries) && data.savouries.length) SAVOURIES = data.savouries;
@@ -91,19 +92,20 @@ const CATS = [
   {id:'bulk', en:'Bulk & Festival', ta:'மொத்த ஆர்டர்', count:null, key:'cat_bulk'},
   {id:'gifting', en:'Gift Boxes', ta:'பரிசுப் பெட்டி', count:null, key:'cat_gift'},
 ];
-const TRUST = [
-  {ic:'clock', en:'Since 2004', sub:'Two decades of trust'},
-  {ic:'hand', en:'Own-Made', sub:'Fresh, in-house, daily'},
-  {ic:'truck', en:'Ships Pan-India', sub:'Tamil Nadu & beyond'},
-  {ic:'leaf', en:'No Preservatives', sub:'Pure, traditional taste'},
-];
+let SHOP_SINCE = 2004;
+function yearsInBusiness(){ return new Date().getFullYear() - SHOP_SINCE; }
+function getTrust(){
+  return [
+    {ic:'clock', en: yearsInBusiness() + '+ Years', sub:'Of tradition and trust', countUp: yearsInBusiness()},
+    {ic:'hand', en:'Own-Made', sub:'Fresh, in-house, daily'},
+    {ic:'truck', en:'Ships Pan-India', sub:'Tamil Nadu & beyond'},
+    {ic:'leaf', en:'No Preservatives', sub:'Pure, traditional taste'},
+  ];
+}
 
 /* ---------- STATE ---------- */
 let SHOP_UPI = 'vannaisrisanthi@ybl';
 let SHOP_NAME_FOR_UPI = 'Vannai Sri Santhi Sweets';
-let SHOP_WHATSAPP = '+91 98765 43210';
-let SHOP_INSTAGRAM = 'https://www.instagram.com/vannai_sri_santhi_sweets';
-let SHOP_FACEBOOK = 'https://facebook.com/vannaisrisanthi';
 const ORDERS_KEY = 'vss_orders';
 function loadOrders(){ try{ return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }catch(e){ return []; } }
 function saveOrder(order){
@@ -115,15 +117,12 @@ function saveOrder(order){
 let state = { tab:'sweets', cart:[], photos:{}, qty:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''} };
 ALL.forEach(i=>state.qty[i.id]=1);
 
-function handlePhoto(e,key){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{ state.photos[key]=ev.target.result; renderAll(); };
-  reader.readAsDataURL(file);
-}
+const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
 function photoFill(key){
   const src=state.photos[key];
-  return src? `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">` : '';
+  if(src) return `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+  if(ILLUSTRATED_IDS.has(key)) return `<img src="assets/products/${key}.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" class="placeholder-illustration"><span class="illustration-tag">Illustration</span>`;
+  return '';
 }
 
 function setTab(t){ state.tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderProducts(); }
@@ -148,12 +147,8 @@ function showToast(msg){
 /* ---------- RENDER ---------- */
 function renderCategories(){
   document.getElementById('catGrid').innerHTML = CATS.map(c=>`
-    <div class="cat-card" onclick="${c.id==='sweets'||c.id==='savouries' ? `setTab('${c.id}');document.getElementById('bestsellers').scrollIntoView({behavior:'smooth'})` : `document.getElementById('bulk').scrollIntoView({behavior:'smooth'})`}">
-      <label class="photo-slot cat-thumb" onclick="event.stopPropagation()">
-        ${photoFill(c.key)}
-        <span class="hint">${icon('camera',18)}Add photo</span>
-        <input type="file" accept="image/*" onchange="handlePhoto(event,'${c.key}')">
-      </label>
+    <div class="cat-card reveal" onclick="${c.id==='sweets'||c.id==='savouries' ? `setTab('${c.id}');document.getElementById('bestsellers').scrollIntoView({behavior:'smooth'})` : `document.getElementById('bulk').scrollIntoView({behavior:'smooth'})`}">
+      <div class="photo-slot cat-thumb">${photoFill(c.key)}</div>
       <div class="label">
         <div class="en">${c.en}</div>
         <div class="ta ta">${c.ta}</div>
@@ -162,23 +157,19 @@ function renderCategories(){
     </div>`).join('');
 }
 function renderTrust(){
-  document.getElementById('trustGrid').innerHTML = TRUST.map(t=>`
-    <div class="trust-item">
+  document.getElementById('trustGrid').innerHTML = getTrust().map(t=>`
+    <div class="trust-item reveal">
       <div class="medallion"><div class="inner" style="color:var(--maroon);">${icon(t.ic,20)}</div></div>
-      <div class="en">${t.en}</div>
+      <div class="en" ${t.countUp?`data-countup="${t.countUp}" data-suffix="+ Years"`:''}>${t.countUp?'0+ Years':t.en}</div>
       <div class="sub">${t.sub}</div>
     </div>`).join('');
 }
 function renderProducts(){
   const list = state.tab==='sweets'?SWEETS:SAVOURIES;
-  document.getElementById('prodGrid').innerHTML = list.map(it=>`
-    <div class="prod-card">
+  document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>`
+    <div class="prod-card" style="animation-delay:${idx*0.06}s">
       ${it.best?`<span class="tag-best">Bestseller</span>`:''}
-      <label class="photo-slot prod-thumb" onclick="event.stopPropagation()">
-        ${photoFill(it.id)}
-        <span class="hint">${icon('camera',18)}Add photo</span>
-        <input type="file" accept="image/*" onchange="handlePhoto(event,'${it.id}')">
-      </label>
+      <div class="photo-slot prod-thumb">${photoFill(it.id)}</div>
       <div class="prod-body">
         <div class="prod-en">${it.en}</div>
         <div class="prod-ta ta">${it.ta}</div>
@@ -315,6 +306,12 @@ function confirmPaid(){
   renderCartBadge();
   renderDrawer();
 }
-function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderDrawer(); updateSocialLinks(); }
+function renderSitePhotos(){
+  ['hero','bulk','story'].forEach(key=>{
+    const el = document.getElementById(key+'PhotoSlot');
+    if(el) el.innerHTML = photoFill(key);
+  });
+}
+function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderDrawer(); }
 loadSharedData();
 renderAll();

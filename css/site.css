@@ -23,12 +23,13 @@ button{font-family:inherit;cursor:pointer;}
 .medallion .inner{border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff8ea,var(--ivory-deep) 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--maroon-deep);text-align:center;}
 
 /* ---- Announcement bar ---- */
-.announce{background:var(--maroon-deep);color:var(--gold-bright);text-align:center;font-size:12.5px;font-weight:600;padding:8px 14px;letter-spacing:.2px;}
+/* replaced by .marquee-wrap / .marquee-track below */
 
 /* ---- Header ---- */
 header{background:var(--card);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:50;}
 .header-row{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;gap:20px;}
 .logo{display:flex;align-items:center;gap:10px;}
+.logo-img{height:52px;width:auto;border-radius:50%;}
 .logo .brand-en{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:21px;color:var(--maroon);line-height:1.1;}
 .logo .brand-ta{font-size:10.5px;color:var(--ink-soft);}
 nav.mainnav{display:flex;gap:30px;}
@@ -39,6 +40,10 @@ nav.mainnav a:hover{color:var(--maroon);border-color:var(--gold);}
 .icon-btn svg{width:21px;height:21px;}
 .cart-count{position:absolute;top:-7px;right:-9px;background:var(--maroon);color:var(--gold-bright);font-size:10px;font-weight:800;border-radius:999px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
 .burger{display:none;background:none;border:none;color:var(--maroon);}
+.mobile-nav{display:none;flex-direction:column;background:var(--card);border-top:1px solid var(--line);padding:4px 28px 10px;}
+.mobile-nav.show{display:flex;}
+.mobile-nav a{padding:13px 0;font-size:14px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);}
+.mobile-nav a:last-child{border-bottom:none;}
 
 /* ---- Hero ---- */
 .hero{background:linear-gradient(120deg,var(--maroon-soft),var(--maroon) 55%,var(--maroon-deep));color:#fff;position:relative;overflow:hidden;}
@@ -52,10 +57,9 @@ nav.mainnav a:hover{color:var(--maroon);border-color:var(--gold);}
 .btn svg{width:16px;height:16px;}
 .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold) 65%,var(--gold-deep));color:var(--maroon-deep);border:1px solid var(--gold-deep);box-shadow:0 8px 20px rgba(150,115,26,0.35);}
 .btn-ghost{background:transparent;color:var(--gold-bright);border:1.5px solid var(--gold-bright);}
-.photo-slot{position:relative;background:repeating-linear-gradient(135deg,var(--ivory-deep),var(--ivory-deep) 10px,#E9D6A3 10px,#E9D6A3 20px);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);cursor:pointer;overflow:hidden;}
+.illustration-tag{position:absolute;bottom:6px;right:6px;background:rgba(46,7,19,0.78);color:var(--gold-bright);font-size:8.5px;font-weight:600;padding:2px 7px;border-radius:5px;letter-spacing:.2px;z-index:2;}
+.photo-slot{position:relative;background:repeating-linear-gradient(135deg,var(--ivory-deep),var(--ivory-deep) 10px,#E9D6A3 10px,#E9D6A3 20px);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);overflow:hidden;}
 .photo-slot img{width:100%;height:100%;object-fit:cover;}
-.photo-slot .hint{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600;}
-.photo-slot input{display:none;}
 .hero-photo{height:340px;border:2px solid var(--gold);box-shadow:var(--shadow);}
 
 /* ---- Section shells ---- */
@@ -143,12 +147,62 @@ footer{background:var(--maroon-deep);color:#e8d9b8;padding-top:56px;}
 .close-x svg{width:20px;height:20px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--maroon-deep);color:var(--gold-bright);padding:12px 22px;border-radius:10px;font-size:13px;z-index:200;box-shadow:0 10px 26px rgba(0,0,0,0.35);border:1px solid var(--gold-deep);}
 
+/* ---------- Marquee strip ---------- */
+.marquee-wrap{background:var(--maroon-deep);border-bottom:2px solid var(--gold);overflow:hidden;padding:9px 0;}
+.marquee-track{display:flex;white-space:nowrap;width:max-content;animation:marquee 28s linear infinite;}
+.marquee-track span{color:var(--gold-bright);font-size:12px;font-weight:600;letter-spacing:.3px;padding:0 22px;display:inline-flex;align-items:center;gap:22px;}
+.marquee-track span:after{content:'◆';color:var(--gold-deep);font-size:9px;}
+@keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@media (prefers-reduced-motion: reduce){.marquee-track{animation:none;}}
+
+/* ---------- Hero word reveal ---------- */
+.hw{display:inline-block;opacity:0;transform:translateY(100%);}
+
+/* ---------- Card tilt + shine sweep ---------- */
+.cat-card, .prod-card{position:relative;overflow:hidden;transform-style:preserve-3d;transition:transform .25s ease, box-shadow .25s ease;}
+.cat-card:before, .prod-card:before{
+  content:'';position:absolute;top:0;left:-150%;width:60%;height:100%;
+  background:linear-gradient(115deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform:skewX(-18deg);transition:left .6s ease;pointer-events:none;z-index:3;
+}
+.cat-card:hover:before, .prod-card:hover:before{left:150%;}
+
+/* ---------- Count-up number styling ---------- */
+.trust-item .en[data-countup]{font-variant-numeric:tabular-nums;}
+
+/* ---------- Cursor sparkle canvas ---------- */
+#sparkleCanvas{position:fixed;inset:0;pointer-events:none;z-index:9999;}
+.lenis.lenis-smooth{scroll-behavior:auto;}
+.lenis.lenis-smooth iframe{pointer-events:none;}
+
+.reveal{opacity:0;transform:translateY(28px);}
+.reveal.revealed{opacity:1;transform:translateY(0);}
+.reveal, .reveal.revealed{transition:opacity .7s cubic-bezier(.22,.9,.32,1), transform .7s cubic-bezier(.22,.9,.32,1);}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.prod-card{animation:fadeInUp .5s cubic-bezier(.22,.9,.32,1) both;}
+
+.hero{position:relative;}
+.ember-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.65;z-index:1;}
+.hero-inner{position:relative;z-index:2;}
+
+/* Pinned scrollytelling story section */
+.story-pin-wrap{height:300vh;position:relative;}
+.story-pin-inner{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:1fr 1.1fr;gap:50px;align-items:center;overflow:hidden;}
+.story-beats{position:relative;height:220px;}
+.story-beat{position:absolute;inset:0;opacity:0;}
+.story-beat.active{opacity:1;}
+.story-beat h2{font-family:'Cormorant Garamond',serif;font-size:30px;}
+.story-beat p{margin-top:14px;color:var(--ink-soft);font-size:14px;line-height:1.75;max-width:440px;}
 @media (max-width:920px){
+  .story-pin-wrap{height:auto;}
+  .story-pin-inner{position:static;height:auto;grid-template-columns:1fr;padding:44px 22px;}
+  .story-beat{position:relative;opacity:1;margin-bottom:36px;}
   nav.mainnav{display:none;}
   .burger{display:block;}
   .hero-inner{grid-template-columns:1fr;padding:44px 22px;}
   .hero h1{font-size:32px;}
   .cat-grid,.trust-grid,.prod-grid{grid-template-columns:repeat(2,1fr);}
-  .bulk-banner,.story{grid-template-columns:1fr;}
+  .bulk-banner{grid-template-columns:1fr;}
   .foot-grid{grid-template-columns:1fr 1fr;}
 }

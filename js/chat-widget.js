@@ -1,5 +1,17 @@
 document.getElementById('chatFabIcon').innerHTML = icon('smile',26);
-function toggleChat(open){ document.getElementById('chatDrawer').classList.toggle('show',open); document.getElementById('chatOverlay').classList.toggle('show',open); }
+function toggleChat(open){
+  document.getElementById('chatDrawer').classList.toggle('show',open);
+  document.getElementById('chatOverlay').classList.toggle('show',open);
+  try{ sessionStorage.setItem('vss_chat_interacted','1'); }catch(e){}
+}
+
+/* Proactively greet each new visit — opens once per browser session, and
+   never fires if the visitor has already opened or dismissed the chat. */
+setTimeout(()=>{
+  let interacted = false;
+  try{ interacted = !!sessionStorage.getItem('vss_chat_interacted'); }catch(e){}
+  if(!interacted) toggleChat(true);
+}, 3000);
 
 /* ---- Knowledge base, reconciled with the shop's real policies/data ---- */
 const knowledgeBase = [
