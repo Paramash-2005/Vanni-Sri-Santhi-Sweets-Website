@@ -57,7 +57,47 @@ function renderOrders(){
           <button class="mark-paid" onclick="setOrderStatus(${idx},'paid')">Mark as Paid</button>
           <button class="mark-cancel" onclick="setOrderStatus(${idx},'cancelled')">Cancel</button>
         </div>` : ''}
+      ${o.status==='paid' ? `
+        <div class="order-actions">
+          <button class="print-order" onclick="printOrderBill(${idx})">Print Bill</button>
+        </div>` : ''}
     </div>`).join('');
+}
+function printOrderBill(idx){
+  const orders = loadOrders();
+  const o = orders[idx];
+  if(!o) return;
+  const rows = o.items.map(it=>`
+    <tr>
+      <td style="padding:5px 0;">${it.name}</td>
+      <td style="padding:5px 0;text-align:center;">${it.qty}kg</td>
+      <td style="padding:5px 0;text-align:right;">₹${it.price}</td>
+      <td style="padding:5px 0;text-align:right;">₹${it.price*it.qty}</td>
+    </tr>`).join('');
+  document.getElementById('billPrintArea').innerHTML = `
+    <div style="text-align:center;border-bottom:1px dashed #ccc;padding-bottom:10px;margin-bottom:10px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:19px;color:var(--maroon);">${data.shop.nameEn}</div>
+      <div style="font-size:11px;color:#7A5A3A;margin-top:3px;">${data.shop.city} · ${data.shop.phone}</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7A5A3A;margin-bottom:10px;">
+      <span>Bill / Order #${o.id}</span>
+      <span style="background:rgba(74,14,30,0.12);color:var(--maroon);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:999px;">Paid</span>
+    </div>
+    <div style="font-size:11px;color:#7A5A3A;margin-bottom:10px;">${o.date}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="border-bottom:1.5px solid #ccc;color:#7A5A3A;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">
+        <th style="text-align:left;padding-bottom:6px;">Item</th>
+        <th style="padding-bottom:6px;">Qty</th>
+        <th style="text-align:right;padding-bottom:6px;">Rate</th>
+        <th style="text-align:right;padding-bottom:6px;">Amount</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;border-top:1.5px dashed #ccc;margin-top:10px;padding-top:10px;color:var(--maroon);"><span>Total Paid</span><span>₹${o.total}</span></div>
+    <div style="font-size:11px;color:#7A5A3A;margin-top:12px;border-top:1px dashed #ccc;padding-top:10px;">
+      Billed to: ${o.customer.name} · ${o.customer.phone}<br>${o.customer.address}
+    </div>`;
+  window.print();
 }
 function setOrderStatus(idx, status){
   const orders = loadOrders();

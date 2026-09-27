@@ -70,4 +70,12 @@ header .sub{font-size:11.5px;opacity:.75;margin-top:2px;}
 .order-actions button{padding:7px 14px;border-radius:8px;font-size:11.5px;font-weight:600;border:1.5px solid var(--line);background:#fff;}
 .order-actions button.mark-paid{background:var(--maroon);color:var(--gold-bright);border-color:var(--maroon);}
 .order-actions button.mark-cancel{color:#a33;border-color:#e3b8b8;}
+.order-actions button.print-order{color:var(--maroon);border-color:var(--gold);}
+
+#billPrintArea{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #billPrintArea, #billPrintArea *{visibility:visible;}
+  #billPrintArea{display:block;position:fixed;top:0;left:0;width:100%;padding:24px;}
+}
 .empty-note{text-align:center;color:var(--ink-soft);font-size:12.5px;padding:30px 10px;}

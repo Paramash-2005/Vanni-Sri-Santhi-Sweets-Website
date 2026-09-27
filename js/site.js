@@ -253,6 +253,9 @@ function renderDrawer(){
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiLink);
     body.innerHTML = `
       <div style="text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:var(--ivory-deep);color:var(--maroon);font-weight:700;font-size:12px;padding:6px 14px;border-radius:999px;margin-bottom:10px;">
+          ${icon('clock',14)} Complete payment within <span id="payCountdown">10:00</span>
+        </div>
         <div style="font-weight:700;font-size:15px;">Pay ₹${amount} via UPI</div>
         <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Scan with any UPI app, or tap the button below on your phone</div>
         <img src="${qrUrl}" alt="UPI QR code" style="width:190px;height:190px;margin:16px auto;border:2px solid var(--gold);border-radius:12px;background:#fff;padding:8px;">
@@ -260,13 +263,23 @@ function renderDrawer(){
         <div style="font-size:11px;color:var(--ink-soft);">Paying to: ${SHOP_UPI}</div>
       </div>
       <div style="margin-top:18px;padding:12px 14px;background:var(--ivory-deep);border-radius:10px;font-size:12px;color:var(--ink-soft);">
-        Once your payment is complete, tap "I've Paid" below. Your order will show as <b>pending verification</b> until the shop confirms it was received.
+        Once your payment is complete, tap "I've Paid" below. Your order will show as <b>pending verification</b> — the shop checks and confirms each payment before it's marked as received.
       </div>`;
     foot.innerHTML = `
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="state.checkoutStep='details';renderDrawer();">Back</button>
         <button class="btn btn-gold" style="flex:2;justify-content:center;" onclick="confirmPaid()">${icon('check',15)} I've Paid</button>
       </div>`;
+    return;
+  }
+  if(state.checkoutStep==='expired'){
+    body.innerHTML = `
+      <div style="text-align:center;padding:50px 10px;">
+        <div class="medallion" style="width:56px;height:56px;margin:0 auto;"><div class="inner" style="width:44px;height:44px;color:var(--maroon);">${icon('clock',20)}</div></div>
+        <div style="font-weight:700;font-size:15px;margin-top:14px;">Payment window expired</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;max-width:280px;margin-left:auto;margin-right:auto;">For your security, UPI payment sessions expire after 10 minutes. Your basket is still saved — just start the payment again.</div>
+      </div>`;
+    foot.innerHTML = `<button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="retryPayment()">Try Again</button>`;
     return;
   }
   if(state.checkoutStep==='done'){
@@ -281,17 +294,19 @@ function renderDrawer(){
     body.innerHTML = `
       <div style="text-align:center;padding:20px 10px 6px;">
         <div class="medallion" style="width:56px;height:56px;margin:0 auto;"><div class="inner" style="width:44px;height:44px;color:var(--maroon);">${icon('check',20)}</div></div>
-        <div style="font-weight:700;font-size:15px;margin-top:12px;">Order placed!</div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">We'll confirm once your UPI payment is verified. Thank you for shopping with us!</div>
+        <div style="font-weight:700;font-size:15px;margin-top:12px;">Order submitted!</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Thank you for shopping with us! Your official bill will be sent once the shop verifies your payment.</div>
       </div>
       <div id="billArea" style="background:var(--card);border:1.5px solid var(--gold);border-radius:12px;padding:18px;margin-top:8px;">
         <div style="text-align:center;border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:10px;">
           <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:17px;color:var(--maroon);">${SHOP_NAME_FOR_UPI}</div>
           <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${document.getElementById('footAddress').textContent} · ${document.getElementById('footPhone').textContent}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
-          <span>Bill / Order #${o.id}</span><span>${o.date}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
+          <span>Order Summary #${o.id}</span>
+          <span style="background:rgba(212,175,55,0.25);color:var(--gold-deep);font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:999px;">Pending Verification</span>
         </div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">${o.date}</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead><tr style="border-bottom:1.5px solid var(--line);color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">
             <th style="text-align:left;padding-bottom:6px;font-weight:600;">Item</th>
@@ -301,14 +316,14 @@ function renderDrawer(){
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;color:var(--maroon);"><span>Total Paid</span><span>₹${o.total}</span></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;color:var(--maroon);"><span>Order Total</span><span>₹${o.total}</span></div>
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;">
           Billed to: ${o.customer.name} · ${o.customer.phone}<br>${o.customer.address}
         </div>
       </div>`;
     foot.innerHTML = `
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="printBill()">${icon('printer',14)} Print / Save Bill</button>
+        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="printBill()">${icon('printer',14)} Print / Save Summary</button>
         <button class="btn btn-gold" style="flex:1;justify-content:center;" onclick="state.checkoutStep='cart';toggleDrawer(false);">Continue Shopping</button>
       </div>`;
     return;
@@ -330,6 +345,33 @@ function renderShopLinks(){
   const enquire = document.getElementById('enquireBtn');
   if(enquire) enquire.href = buildWhatsappLink(`Hi ${SHOP_NAME_FOR_UPI}! I'd like to enquire about a bulk/wedding order.\nOccasion: \nApprox. quantity: `);
 }
+const PAYMENT_WINDOW_MS = 10*60*1000;
+let paymentTimerHandle = null;
+function startPaymentTimer(){
+  if(paymentTimerHandle) clearInterval(paymentTimerHandle);
+  state.payDeadline = Date.now() + PAYMENT_WINDOW_MS;
+  paymentTimerHandle = setInterval(()=>{
+    if(state.checkoutStep !== 'pay'){ clearInterval(paymentTimerHandle); paymentTimerHandle = null; return; }
+    const remaining = state.payDeadline - Date.now();
+    if(remaining <= 0){
+      clearInterval(paymentTimerHandle); paymentTimerHandle = null;
+      state.checkoutStep = 'expired';
+      renderDrawer();
+      return;
+    }
+    const el = document.getElementById('payCountdown');
+    if(el){
+      const m = Math.floor(remaining/60000);
+      const s = Math.floor((remaining%60000)/1000);
+      el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    }
+  }, 1000);
+}
+function retryPayment(){
+  state.checkoutStep = 'pay';
+  startPaymentTimer();
+  renderDrawer();
+}
 function goToPay(){
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
@@ -337,6 +379,7 @@ function goToPay(){
   if(!name || !phone || !address){ showToast('Please fill in your name, phone and address'); return; }
   state.customer = {name, phone, address};
   state.checkoutStep = 'pay';
+  startPaymentTimer();
   renderDrawer();
 }
 function confirmPaid(){
