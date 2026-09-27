@@ -30,7 +30,7 @@ const PHOTO_SLOTS = [
 ];
 
 let data = {
-  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 94435 55772', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'vannaisrisanthi@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery', whatsapp:'+91 94435 55772', instagram:'https://www.instagram.com/vannai_sri_santhi_sweets'},
+  shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 94435 55772', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'9791577642@ybl', nameEn:'Vannai Sri Santhi Sweets & Bakery', whatsapp:'+91 94435 55772', instagram:'https://www.instagram.com/vannai_sri_santhi_sweets'},
   sweets: JSON.parse(JSON.stringify(DEFAULT_SWEETS)),
   savouries: JSON.parse(JSON.stringify(DEFAULT_SAVOURIES)),
   photos:{}
