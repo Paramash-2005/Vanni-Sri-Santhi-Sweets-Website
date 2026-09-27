@@ -40,7 +40,7 @@ vannai-website/
 
 ### 3. Set your two secret values
 In your Vercel project: Settings → Environment Variables. Add both of these:
-- `ANTHROPIC_API_KEY` — your real key from console.anthropic.com (powers the AI assistant)
+- `GROQ_API_KEY` — a **free** key from console.groq.com (no credit card needed) — powers the AI assistant at no cost
 - `ADMIN_PASSWORD` — a password you choose, to protect admin.html (do NOT reuse a password from anywhere else)
 
 Then redeploy: Deployments tab → latest deployment → ⋯ → Redeploy.
