@@ -120,7 +120,7 @@ function saveOrder(order){
   try{ localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); }catch(e){}
 }
 
-let state = { tab:'sweets', cart:[], photos:{}, qty:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''} };
+let state = { tab:'sweets', cart:[], photos:{}, qty:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''}, paymentAttempted:false };
 ALL.forEach(i=>state.qty[i.id]=1);
 
 const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
@@ -258,18 +258,21 @@ function renderDrawer(){
         </div>
         <div style="font-weight:700;font-size:15px;">Pay ₹${amount} via UPI</div>
         <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Scan with any UPI app, or tap the button below on your phone</div>
-        <img src="${qrUrl}" alt="UPI QR code" style="width:190px;height:190px;margin:16px auto;border:2px solid var(--gold);border-radius:12px;background:#fff;padding:8px;">
-        <a class="btn btn-gold" href="${upiLink}" style="width:100%;justify-content:center;margin-bottom:10px;">${icon('grid',15)} Open UPI App to Pay</a>
+        <img src="${qrUrl}" alt="UPI QR code" onclick="markPaymentAttempted()" style="width:190px;height:190px;margin:16px auto;border:2px solid var(--gold);border-radius:12px;background:#fff;padding:8px;cursor:pointer;">
+        <a class="btn btn-gold" href="${upiLink}" onclick="markPaymentAttempted()" style="width:100%;justify-content:center;margin-bottom:10px;">${icon('grid',15)} Open UPI App to Pay</a>
         <div style="font-size:11px;color:var(--ink-soft);">Paying to: ${SHOP_UPI}</div>
       </div>
       <div style="margin-top:18px;padding:12px 14px;background:var(--ivory-deep);border-radius:10px;font-size:12px;color:var(--ink-soft);">
-        Once your payment is complete, tap "I've Paid" below. Your order will show as <b>pending verification</b> — the shop checks and confirms each payment before it's marked as received.
+        ${state.paymentAttempted
+          ? `Once your payment is complete, tap "I've Paid" below. Your order will show as <b>pending verification</b> — the shop checks and confirms each payment before it's marked as received.`
+          : `Tap "Open UPI App to Pay" above (or scan the QR code) to begin. The "I've Paid" confirmation button will appear here once you do.`}
       </div>`;
-    foot.innerHTML = `
+    foot.innerHTML = state.paymentAttempted ? `
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="state.checkoutStep='details';renderDrawer();">Back</button>
         <button class="btn btn-gold" style="flex:2;justify-content:center;" onclick="confirmPaid()">${icon('check',15)} I've Paid</button>
-      </div>`;
+      </div>` : `
+      <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="state.checkoutStep='details';renderDrawer();">Back</button>`;
     return;
   }
   if(state.checkoutStep==='expired'){
@@ -369,7 +372,13 @@ function startPaymentTimer(){
 }
 function retryPayment(){
   state.checkoutStep = 'pay';
+  state.paymentAttempted = false;
   startPaymentTimer();
+  renderDrawer();
+}
+function markPaymentAttempted(){
+  if(state.paymentAttempted) return;
+  state.paymentAttempted = true;
   renderDrawer();
 }
 function goToPay(){
@@ -379,6 +388,7 @@ function goToPay(){
   if(!name || !phone || !address){ showToast('Please fill in your name, phone and address'); return; }
   state.customer = {name, phone, address};
   state.checkoutStep = 'pay';
+  state.paymentAttempted = false;
   startPaymentTimer();
   renderDrawer();
 }
