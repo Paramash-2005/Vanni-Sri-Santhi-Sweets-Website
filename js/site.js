@@ -107,7 +107,7 @@ function getTrust(){
 }
 
 /* ---------- STATE ---------- */
-let SHOP_UPI = '9791577642@ybl';
+let SHOP_UPI = 'balasweetparamash-1@okaxis';
 let SHOP_NAME_FOR_UPI = 'Vannai Sri Santhi Sweets';
 let SHOP_WHATSAPP = '+919443555772';
 let SHOP_INSTAGRAM = 'https://www.instagram.com/vannai_sri_santhi_sweets';
