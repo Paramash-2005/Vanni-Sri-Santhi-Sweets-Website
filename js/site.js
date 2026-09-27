@@ -15,7 +15,8 @@ const ICON_PATHS = {
   instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
   whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
   grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
-  check:'<polyline points="20 6 9 17 4 12"/>'
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>'
 };
 function icon(name,size=18,sw=1.8){return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;}
 document.querySelector('.burger').innerHTML = icon('menu',22);
@@ -269,14 +270,47 @@ function renderDrawer(){
     return;
   }
   if(state.checkoutStep==='done'){
+    const o = state.lastOrder;
+    const rows = o.items.map(it=>`
+      <tr>
+        <td style="padding:5px 0;">${it.name}</td>
+        <td style="padding:5px 0;text-align:center;">${it.qty}kg</td>
+        <td style="padding:5px 0;text-align:right;">₹${it.price}</td>
+        <td style="padding:5px 0;text-align:right;">₹${it.price*it.qty}</td>
+      </tr>`).join('');
     body.innerHTML = `
-      <div style="text-align:center;padding:40px 10px;">
-        <div class="medallion" style="width:70px;height:70px;margin:0 auto;"><div class="inner" style="width:56px;height:56px;color:var(--maroon);">${icon('check',26)}</div></div>
-        <div style="font-weight:700;font-size:15px;margin-top:16px;">Order submitted!</div>
-        <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">Order #${state.lastOrderId} · pending verification</div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:10px;">We'll confirm once your UPI payment is verified. Thank you for shopping with us!</div>
+      <div style="text-align:center;padding:20px 10px 6px;">
+        <div class="medallion" style="width:56px;height:56px;margin:0 auto;"><div class="inner" style="width:44px;height:44px;color:var(--maroon);">${icon('check',20)}</div></div>
+        <div style="font-weight:700;font-size:15px;margin-top:12px;">Order placed!</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">We'll confirm once your UPI payment is verified. Thank you for shopping with us!</div>
+      </div>
+      <div id="billArea" style="background:var(--card);border:1.5px solid var(--gold);border-radius:12px;padding:18px;margin-top:8px;">
+        <div style="text-align:center;border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:10px;">
+          <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:17px;color:var(--maroon);">${SHOP_NAME_FOR_UPI}</div>
+          <div style="font-size:10.5px;color:var(--ink-soft);margin-top:3px;">${document.getElementById('footAddress').textContent} · ${document.getElementById('footPhone').textContent}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
+          <span>Bill / Order #${o.id}</span><span>${o.date}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="border-bottom:1.5px solid var(--line);color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">
+            <th style="text-align:left;padding-bottom:6px;font-weight:600;">Item</th>
+            <th style="padding-bottom:6px;font-weight:600;">Qty</th>
+            <th style="text-align:right;padding-bottom:6px;font-weight:600;">Rate</th>
+            <th style="text-align:right;padding-bottom:6px;font-weight:600;">Amount</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;color:var(--maroon);"><span>Total Paid</span><span>₹${o.total}</span></div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;">
+          Billed to: ${o.customer.name} · ${o.customer.phone}<br>${o.customer.address}
+        </div>
       </div>`;
-    foot.innerHTML = `<button class="btn btn-gold btn-block" style="width:100%;justify-content:center;" onclick="state.checkoutStep='cart';toggleDrawer(false);">Continue Shopping</button>`;
+    foot.innerHTML = `
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="printBill()">${icon('printer',14)} Print / Save Bill</button>
+        <button class="btn btn-gold" style="flex:1;justify-content:center;" onclick="state.checkoutStep='cart';toggleDrawer(false);">Continue Shopping</button>
+      </div>`;
     return;
   }
 }
@@ -315,12 +349,13 @@ function confirmPaid(){
     status: 'pending_verification'
   };
   saveOrder(order);
-  state.lastOrderId = id;
+  state.lastOrder = order;
   state.cart = [];
   state.checkoutStep = 'done';
   renderCartBadge();
   renderDrawer();
 }
+function printBill(){ window.print(); }
 function renderSitePhotos(){
   ['hero','bulk','story'].forEach(key=>{
     const el = document.getElementById(key+'PhotoSlot');
