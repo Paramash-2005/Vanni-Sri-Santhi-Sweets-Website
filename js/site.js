@@ -16,7 +16,9 @@ const ICON_PATHS = {
   whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
   grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
   check:'<polyline points="20 6 9 17 4 12"/>',
-  printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>'
+  printer:'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  mail:'<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22 6 12 13 2 6"/>'
 };
 function icon(name,size=18,sw=1.8){return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;}
 document.querySelector('.burger').innerHTML = icon('menu',22);
@@ -40,7 +42,8 @@ function closeMobileMenu(){
 }
 document.querySelectorAll('.icon-btn')[0].innerHTML = icon('phone',20);
 document.getElementById('cartIconWrap').innerHTML = icon('cart',21);
-document.querySelector('.close-x').innerHTML = icon('x',20);
+document.getElementById('acctIconWrap').innerHTML = icon('user',20);
+document.querySelectorAll('.close-x').forEach(el=>el.innerHTML = icon('x',20));
 
 /* ---------- DATA ---------- */
 let SWEETS = [
@@ -120,8 +123,18 @@ function saveOrder(order){
   try{ localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); }catch(e){}
 }
 
+const SHOP_QUERY_EMAIL = 'vannaisrisanthisweetsandbakery@gmail.com';
+const CUSTOMER_KEY = 'vss_customer';
+function loadCustomerProfile(){ try{ return JSON.parse(localStorage.getItem(CUSTOMER_KEY)); }catch(e){ return null; } }
+function saveCustomerProfile(profile){ try{ localStorage.setItem(CUSTOMER_KEY, JSON.stringify(profile)); }catch(e){} }
+function clearCustomerProfile(){ try{ localStorage.removeItem(CUSTOMER_KEY); }catch(e){} }
+
 let state = { tab:'sweets', cart:[], photos:{}, qty:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''}, paymentAttempted:false };
 ALL.forEach(i=>state.qty[i.id]=1);
+(function(){
+  const profile = loadCustomerProfile();
+  if(profile){ state.customer.name = profile.name||''; state.customer.phone = profile.phone||''; }
+})();
 
 const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
 function photoFill(key){
@@ -387,6 +400,8 @@ function goToPay(){
   const address = document.getElementById('custAddress').value.trim();
   if(!name || !phone || !address){ showToast('Please fill in your name, phone and address'); return; }
   state.customer = {name, phone, address};
+  const existingProfile = loadCustomerProfile();
+  saveCustomerProfile({name, phone, email: existingProfile ? existingProfile.email||'' : ''});
   state.checkoutStep = 'pay';
   state.paymentAttempted = false;
   startPaymentTimer();
@@ -409,6 +424,93 @@ function confirmPaid(){
   renderDrawer();
 }
 function printBill(){ window.print(); }
+
+/* ---------- ACCOUNT ---------- */
+function toggleAcctDrawer(open){
+  document.getElementById('acctDrawer').classList.toggle('show',open);
+  document.getElementById('acctOverlay').classList.toggle('show',open);
+  if(open) renderAcctDrawer();
+}
+function renderAcctDrawer(){
+  const body = document.getElementById('acctBody');
+  const foot = document.getElementById('acctFoot');
+  const profile = loadCustomerProfile();
+  if(!profile || !profile.name || !profile.phone){
+    body.innerHTML = `
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">Save your details once, and we'll fill them in automatically at checkout and show your order history here.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input type="text" id="loginName" placeholder="Full name" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
+        <input type="text" id="loginPhone" placeholder="Phone number" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
+        <input type="email" id="loginEmail" placeholder="Email (optional)" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
+      </div>`;
+    foot.innerHTML = `<button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="loginCustomer()">Continue</button>`;
+    return;
+  }
+  const myOrders = loadOrders().filter(o=>o.customer && o.customer.phone===profile.phone);
+  body.innerHTML = `
+    <div style="padding:14px;background:var(--ivory-deep);border-radius:10px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;">${profile.name}</div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">${profile.phone}${profile.email?' · '+profile.email:''}</div>
+    </div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:10px;">My Orders</div>
+    ${myOrders.length===0 ? `<div style="font-size:12.5px;color:var(--ink-soft);">No orders yet.</div>` : myOrders.map(o=>`
+      <div class="drawer-item" style="align-items:flex-start;">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;">#${o.id}</div>
+          <div style="font-size:11px;color:var(--ink-soft);">${o.date} · ₹${o.total}</div>
+          <div style="font-size:10.5px;margin-top:3px;color:var(--gold-deep);text-transform:uppercase;letter-spacing:.4px;">${(o.status||'').replace(/_/g,' ')}</div>
+        </div>
+      </div>`).join('')}
+  `;
+  foot.innerHTML = `<button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="logoutCustomer()">Log Out</button>`;
+}
+function loginCustomer(){
+  const name = document.getElementById('loginName').value.trim();
+  const phone = document.getElementById('loginPhone').value.trim();
+  const email = document.getElementById('loginEmail').value.trim();
+  if(!name || !phone){ showToast('Please enter your name and phone number'); return; }
+  saveCustomerProfile({name, phone, email});
+  state.customer.name = name; state.customer.phone = phone;
+  showToast('Welcome, ' + name + '!');
+  renderAcctDrawer();
+}
+function logoutCustomer(){
+  clearCustomerProfile();
+  renderAcctDrawer();
+}
+
+/* ---------- QUERY ---------- */
+function toggleQueryModal(open){
+  document.getElementById('queryDrawer').classList.toggle('show',open);
+  document.getElementById('queryOverlay').classList.toggle('show',open);
+  if(open) renderQueryDrawer();
+}
+function renderQueryDrawer(){
+  const body = document.getElementById('queryBody');
+  const foot = document.getElementById('queryFoot');
+  const profile = loadCustomerProfile() || {};
+  body.innerHTML = `
+    <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">Have a question about an order, bulk pricing, or anything else? Send us a query and we'll get back to you by email.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" id="queryName" placeholder="Your name" value="${profile.name||''}" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
+      <input type="text" id="queryPhone" placeholder="Phone number (optional)" value="${profile.phone||''}" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
+      <textarea id="queryMessage" rows="5" placeholder="Type your question here..." style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;"></textarea>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--ink-soft);">This opens your email app, addressed to ${SHOP_QUERY_EMAIL}.</div>
+  `;
+  foot.innerHTML = `<button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="sendQuery()">${icon('mail',15)} Send Query</button>`;
+}
+function sendQuery(){
+  const name = document.getElementById('queryName').value.trim();
+  const phone = document.getElementById('queryPhone').value.trim();
+  const message = document.getElementById('queryMessage').value.trim();
+  if(!message){ showToast('Please type your question'); return; }
+  const subject = 'Query from ' + (name || 'a customer') + ' - Vannai Sri Santhi Sweets';
+  const body = [message, '', 'Name: ' + (name||'-'), 'Phone: ' + (phone||'-')].join('\n');
+  window.location.href = `mailto:${SHOP_QUERY_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  toggleQueryModal(false);
+}
+
 function renderSitePhotos(){
   ['hero','bulk','story'].forEach(key=>{
     const el = document.getElementById(key+'PhotoSlot');
