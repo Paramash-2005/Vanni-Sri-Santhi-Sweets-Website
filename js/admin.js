@@ -51,7 +51,7 @@ function renderOrders(){
       </div>
       <div class="order-meta">${o.date} · ${o.customer.name} · ${o.customer.phone}</div>
       <div class="order-meta">${o.customer.address}</div>
-      <div class="order-items">${o.items.map(it=>`${it.name} × ${it.qty}kg`).join(', ')} — <b>₹${o.total}</b></div>
+      <div class="order-items">${o.items.map(it=>`${it.name} (${it.weightG<1000?it.weightG+'g':'1kg'}) × ${it.packs}`).join(', ')} — <b>₹${o.total}</b></div>
       ${o.status==='pending_verification' ? `
         <div class="order-actions">
           <button class="mark-paid" onclick="setOrderStatus(${idx},'paid')">Mark as Paid</button>
@@ -67,13 +67,17 @@ function printOrderBill(idx){
   const orders = loadOrders();
   const o = orders[idx];
   if(!o) return;
-  const rows = o.items.map(it=>`
+  const rows = o.items.map(it=>{
+    const weightLabel = it.weightG<1000 ? it.weightG+'g' : '1kg';
+    const unitPrice = Math.round(it.price*it.weightG/1000);
+    return `
     <tr>
-      <td style="padding:5px 0;">${it.name}</td>
-      <td style="padding:5px 0;text-align:center;">${it.qty}kg</td>
-      <td style="padding:5px 0;text-align:right;">₹${it.price}</td>
-      <td style="padding:5px 0;text-align:right;">₹${it.price*it.qty}</td>
-    </tr>`).join('');
+      <td style="padding:5px 0;">${it.name} (${weightLabel})</td>
+      <td style="padding:5px 0;text-align:center;">${it.packs}</td>
+      <td style="padding:5px 0;text-align:right;">₹${unitPrice}</td>
+      <td style="padding:5px 0;text-align:right;">₹${unitPrice*it.packs}</td>
+    </tr>`;
+  }).join('');
   document.getElementById('billPrintArea').innerHTML = `
     <div style="text-align:center;border-bottom:1px dashed #ccc;padding-bottom:10px;margin-bottom:10px;">
       <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:19px;color:var(--maroon);">${data.shop.nameEn}</div>
@@ -117,7 +121,31 @@ function loadData(){
     }catch(e){}
   }
 }
-function saveAll(){
+async function saveToServer(){
+  const r = await fetch('/api/admin/save-data', {
+    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+    body: JSON.stringify(withPhotos(data, true)) // only short cloud URLs go to the server
+  });
+  if(!r.ok){ let m='Save failed'; try{ m=(await r.json()).error||m; }catch(e){} throw new Error(m); }
+}
+// Copy of data; urlsOnly=true drops big base64 photos (cloud URLs are tiny)
+function withPhotos(d, urlsOnly){
+  const photos = {};
+  for(const [k,v] of Object.entries(d.photos||{})){
+    if(!urlsOnly || (typeof v==='string' && v.startsWith('https://'))) photos[k]=v;
+  }
+  return Object.assign({}, d, {photos});
+}
+// Save a local copy that can never throw "storage full": try full, then URLs only, then free old data.
+function saveLocalCopy(){
+  const attempts = [()=>withPhotos(data,false), ()=>withPhotos(data,true)];
+  for(const make of attempts){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(make())); return true; }catch(e){}
+  }
+  try{ localStorage.removeItem(STORAGE_KEY); localStorage.setItem(STORAGE_KEY, JSON.stringify(withPhotos(data,true))); return true; }catch(e){}
+  return false;
+}
+async function saveAll(){
   data.shop.city = document.getElementById('fCity').value || data.shop.city;
   data.shop.phone = document.getElementById('fPhone').value || data.shop.phone;
   data.shop.hours = document.getElementById('fHours').value || data.shop.hours;
@@ -125,12 +153,14 @@ function saveAll(){
   data.shop.upi = document.getElementById('fUpi').value || data.shop.upi;
   data.shop.whatsapp = document.getElementById('fWhatsapp').value || data.shop.whatsapp;
   data.shop.instagram = document.getElementById('fInstagram').value || data.shop.instagram;
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    showToast('Saved! Open the customer site to see your changes.');
-  }catch(e){
-    showToast('Could not save — storage may be full (try smaller photos).');
-  }
+  let serverOk = true, serverErr = '';
+  try{ await saveToServer(); }catch(e){ serverOk = false; serverErr = e.message; }
+  // Local copy: photos that live in cloud storage are just short URLs, so this stays small.
+  const localOk = saveLocalCopy();
+  if(serverOk) showToast('Saved! All customers will see your changes within a minute.');
+  else if(localOk) showToast('Saved on this browser only — cloud save failed: ' + serverErr);
+  else showToast('Save failed: ' + serverErr);
+  updateStorageMeter();
 }
 function showToast(msg){
   const host=document.getElementById('toastHost');
@@ -157,11 +187,78 @@ function renderPhotoGrid(){
       <div class="lbl">${p.label}</div>
     </div>`).join('');
 }
-function handlePhoto(e,key){
+/* ---- Photo storage: compress before saving so localStorage (~5MB) never fills up ---- */
+const PHOTO_MAX_DIM = 1400;         // longest side in px (sharp on phones and desktops)
+const PHOTO_SOURCE_MAX = 5 * 1024 * 1024; // max size of the file you pick: 5 MB
+const PHOTO_MAX_BYTES = 300 * 1024; // stored size per photo after compression
+const STORAGE_LIMIT = 5 * 1024 * 1024; // typical browser localStorage quota (~5MB)
+
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      let dim = Math.min(PHOTO_MAX_DIM, Math.max(img.width, img.height));
+      let out;
+      // Shrink quality, then size, until the photo is small — works for any input size
+      for(let tries=0; tries<6; tries++){
+        const scale = dim / Math.max(img.width, img.height);
+        const w = Math.max(1,Math.round(img.width*scale)), h = Math.max(1,Math.round(img.height*scale));
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); // avoid black background on transparent PNGs
+        ctx.drawImage(img,0,0,w,h);
+        let q = 0.8; out = c.toDataURL('image/jpeg', q);
+        while(out.length*0.75 > PHOTO_MAX_BYTES && q > 0.45){ q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+        if(out.length*0.75 <= PHOTO_MAX_BYTES) break;
+        dim = Math.round(dim*0.8);
+      }
+      URL.revokeObjectURL(url);
+      resolve(out);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
+function storageUsedBytes(){
+  let total = 0;
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); total += (k.length + (localStorage.getItem(k)||'').length) * 2; } }catch(e){}
+  return total;
+}
+function updateStorageMeter(){
+  const el = document.getElementById('storageMeter'); if(!el) return;
+  // Estimate what the saved data would take (UTF-16 = 2 bytes/char), replacing the old copy
+  let old = 0; try{ old = ((localStorage.getItem(STORAGE_KEY)||'').length + STORAGE_KEY.length) * 2; }catch(e){}
+  const used = storageUsedBytes() - old + (JSON.stringify(data).length + STORAGE_KEY.length) * 2;
+  const pct = Math.min(100, Math.round(used / (STORAGE_LIMIT*2) * 100)); // quota is ~5M chars = ~10MB UTF-16
+  el.textContent = `Photo storage: ${pct}% used` + (pct>=80 ? ' — almost full, remove unused photos' : '');
+  el.style.color = pct>=80 ? '#B3261E' : '#7A5A3A';
+}
+async function handlePhoto(e,key){
   const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{ data.photos[key]=ev.target.result; renderPhotoGrid(); renderItems(); };
-  reader.readAsDataURL(file);
+  if(file.size > PHOTO_SOURCE_MAX){
+    showToast(`That photo is ${(file.size/1048576).toFixed(1)} MB. The limit is 5 MB per photo — pick a smaller one.`);
+    e.target.value=''; return;
+  }
+  let dataUrl;
+  try{ dataUrl = await compressImage(file); }
+  catch(err){ showToast('Could not read that image (iPhone HEIC files are not supported — use JPG, PNG or WebP).'); return; }
+  showToast('Uploading photo…');
+  try{
+    const r = await fetch('/api/admin/upload-photo', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+      body: JSON.stringify({key, dataUrl})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error || 'Upload failed');
+    data.photos[key] = j.url; // public URL in cloud storage (tiny; no browser storage used)
+    showToast('Photo uploaded. Press "Save All Changes" to publish.');
+  }catch(err){
+    // Server storage not available (e.g. opened as a local file): keep a local preview only
+    data.photos[key] = dataUrl;
+    showToast('Cloud upload failed (' + err.message + '). Saved on this browser only.');
+  }
+  renderPhotoGrid(); renderItems(); updateStorageMeter();
 }
 function setTab(t){ tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderItems(); }
 function currentList(){ return tab==='sweets'?data.sweets:data.savouries; }
@@ -207,3 +304,10 @@ fillShopForm();
 renderPhotoGrid();
 renderItems();
 renderOrders();
+updateStorageMeter();
+// Prefer the cloud copy (what customers see) over this browser's copy
+fetch('/api/shop-data').then(r=>r.ok?r.json():null).then(d=>{
+  if(!d || !d.shop || !Array.isArray(d.sweets)) return;
+  data = Object.assign(data, d); if(!data.photos) data.photos = {};
+  fillShopForm(); renderPhotoGrid(); renderItems(); updateStorageMeter();
+}).catch(()=>{});

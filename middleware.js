@@ -15,7 +15,7 @@
 // -----------------------------------------------------------------------
 
 export const config = {
-  matcher: '/admin.html',
+  matcher: ['/admin.html', '/api/admin/:path*'],
 };
 
 const ADMIN_USER = 'admin';

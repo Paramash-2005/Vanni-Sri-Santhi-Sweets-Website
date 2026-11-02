@@ -76,6 +76,9 @@ function loadSharedData(){
   if(!raw) return;
   let data;
   try{ data = JSON.parse(raw); }catch(e){ return; }
+  applySharedData(data);
+}
+function applySharedData(data){
   if(data.shop){
     const s = data.shop;
     if(s.since){ const el = document.getElementById('sinceYearHeader'); if(el) el.textContent = s.since; SHOP_SINCE = parseInt(s.since) || SHOP_SINCE; }
@@ -129,33 +132,45 @@ function loadCustomerProfile(){ try{ return JSON.parse(localStorage.getItem(CUST
 function saveCustomerProfile(profile){ try{ localStorage.setItem(CUSTOMER_KEY, JSON.stringify(profile)); }catch(e){} }
 function clearCustomerProfile(){ try{ localStorage.removeItem(CUSTOMER_KEY); }catch(e){} }
 
-let state = { tab:'sweets', cart:[], photos:{}, qty:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''}, paymentAttempted:false };
-ALL.forEach(i=>state.qty[i.id]=1);
+let state = { tab:'sweets', cart:[], photos:{}, qty:{}, weight:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''} };
+const WEIGHT_OPTIONS = [250, 500, 1000];
+const DEFAULT_WEIGHT = WEIGHT_OPTIONS[0];
+ALL.forEach(i=>{ state.qty[i.id]=0; state.weight[i.id]=DEFAULT_WEIGHT; });
+function weightLabel(g){ return g<1000 ? g+'g' : '1kg'; }
+function packPrice(pricePerKg, g){ return Math.round(pricePerKg*g/1000); }
 (function(){
   const profile = loadCustomerProfile();
   if(profile){ state.customer.name = profile.name||''; state.customer.phone = profile.phone||''; }
 })();
 
 const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
+// Product ids that have a real photo file at assets/products/<id>.jpg (visible to ALL customers).
+// Add an id here after dropping its photo into assets/products/.
+const PHOTO_FILES = new Set([]);
 function photoFill(key){
-  const src=state.photos[key];
+  const src=state.photos[key] || (PHOTO_FILES.has(key) ? `assets/products/${key}.jpg` : '');
   if(src) return `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
   if(ILLUSTRATED_IDS.has(key)) return `<img src="assets/products/${key}.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" class="placeholder-illustration"><span class="illustration-tag">Illustration</span>`;
   return '';
 }
 
 function setTab(t){ state.tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderProducts(); }
-function changeQty(id,d){ state.qty[id]=Math.max(1,(state.qty[id]||1)+d); renderProducts(); }
+function changeQty(id,d){ state.qty[id]=Math.max(0,(state.qty[id]||0)+d); renderProducts(); }
+function setWeight(id,g){ state.weight[id]=g; renderProducts(); }
 function addToCart(id){
-  const existing=state.cart.find(l=>l.id===id);
-  const q=state.qty[id]||1;
-  if(existing){ existing.qty+=q; } else { state.cart.push({id, qty:q}); }
-  showToast('Added '+findItem(id).en+' to basket');
+  const weightG = state.weight[id]||DEFAULT_WEIGHT;
+  const packs = state.qty[id]||0;
+  if(packs<1){ showToast('Select a quantity first'); return; }
+  const existing=state.cart.find(l=>l.id===id && l.weightG===weightG);
+  if(existing){ existing.packs+=packs; } else { state.cart.push({id, weightG, packs}); }
+  state.qty[id]=0;
+  showToast('Added '+findItem(id).en+' ('+weightLabel(weightG)+') to basket');
+  renderProducts();
   renderCartBadge(); renderDrawer();
 }
-function changeCartQty(idx,d){ state.cart[idx].qty+=d; if(state.cart[idx].qty<=0) state.cart.splice(idx,1); renderCartBadge(); renderDrawer(); }
-function cartTotal(){ return state.cart.reduce((s,l)=>s+findItem(l.id).price*l.qty,0); }
-function cartCount(){ return state.cart.reduce((s,l)=>s+l.qty,0); }
+function changeCartQty(idx,d){ state.cart[idx].packs+=d; if(state.cart[idx].packs<=0) state.cart.splice(idx,1); renderCartBadge(); renderDrawer(); }
+function cartTotal(){ return state.cart.reduce((s,l)=>s+packPrice(findItem(l.id).price,l.weightG)*l.packs,0); }
+function cartCount(){ return state.cart.reduce((s,l)=>s+l.packs,0); }
 function toggleDrawer(open){ document.getElementById('drawer').classList.toggle('show',open); document.getElementById('overlay').classList.toggle('show',open); }
 function showToast(msg){
   const host=document.getElementById('toastHost');
@@ -185,24 +200,30 @@ function renderTrust(){
 }
 function renderProducts(){
   const list = state.tab==='sweets'?SWEETS:SAVOURIES;
-  document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>`
+  document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>{
+    const g = state.weight[it.id]||DEFAULT_WEIGHT;
+    return `
     <div class="prod-card" style="animation-delay:${idx*0.06}s">
       ${it.best?`<span class="tag-best">Bestseller</span>`:''}
       <div class="photo-slot prod-thumb">${photoFill(it.id)}</div>
       <div class="prod-body">
         <div class="prod-en">${it.en}</div>
         <div class="prod-ta ta">${it.ta}</div>
-        <div class="prod-price">₹${it.price} <span class="unit">/ kg, min 1kg</span></div>
+        <div class="prod-price">₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span></div>
+        <div class="weight-pills">
+          ${WEIGHT_OPTIONS.map(w=>`<button class="weight-pill ${g===w?'active':''}" onclick="setWeight('${it.id}',${w})">${weightLabel(w)}</button>`).join('')}
+        </div>
         <div class="prod-actions">
           <div class="qty-stepper">
             <button onclick="changeQty('${it.id}',-1)">${icon('minus',12)}</button>
-            <div class="val">${state.qty[it.id]||1}</div>
+            <div class="val">${state.qty[it.id]||0}</div>
             <button onclick="changeQty('${it.id}',1)">${icon('plus',12)}</button>
           </div>
-          <button class="btn-add" onclick="addToCart('${it.id}')">Add to Cart</button>
+          <button class="btn-add" ${(state.qty[it.id]||0)<1?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="addToCart('${it.id}')">Add to Cart</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function renderCartBadge(){
   const c=cartCount();
@@ -222,17 +243,18 @@ function renderDrawer(){
   if(state.checkoutStep==='cart'){
     body.innerHTML = state.cart.map((line,idx)=>{
       const it=findItem(line.id);
+      const unitPrice = packPrice(it.price, line.weightG);
       return `<div class="drawer-item">
         <label class="thumb photo-slot" style="position:relative;" onclick="event.stopPropagation()">
           ${photoFill(it.id)}
         </label>
         <div style="flex:1;">
           <div style="font-weight:700;font-size:13.5px;">${it.en}</div>
-          <div style="font-size:11px;color:var(--ink-soft);">₹${it.price} / kg</div>
+          <div style="font-size:11px;color:var(--ink-soft);">${weightLabel(line.weightG)} pack · ₹${unitPrice} each</div>
         </div>
         <div class="qty-stepper">
           <button onclick="changeCartQty(${idx},-1)">${icon('minus',12)}</button>
-          <div class="val">${line.qty}</div>
+          <div class="val">${line.packs}</div>
           <button onclick="changeCartQty(${idx},1)">${icon('plus',12)}</button>
         </div>
       </div>`;
@@ -250,68 +272,34 @@ function renderDrawer(){
         <input type="text" id="custPhone" placeholder="Phone number" value="${state.customer.phone}" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;">
         <textarea id="custAddress" rows="3" placeholder="Delivery address / or write Store Pickup" style="padding:10px 12px;border-radius:9px;border:1.5px solid var(--line);font-size:13px;font-family:inherit;">${state.customer.address}</textarea>
       </div>
-      <div style="margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:11.5px;color:var(--ink-soft);">Sold by weight, minimum 1kg per item. Perishable goods — all sales final once shipped.</div>
+      <div style="margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:11.5px;color:var(--ink-soft);">Sold by weight in 250g, 500g and 1kg packs. Perishable goods — all sales final once shipped.</div>
     `;
     foot.innerHTML = `
       <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:14px;"><span>Total</span><span>₹${cartTotal()}</span></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="state.checkoutStep='cart';renderDrawer();">Back</button>
-        <button class="btn btn-gold" style="flex:2;justify-content:center;" onclick="goToPay()">Continue to UPI Payment</button>
-      </div>`;
-    return;
-  }
-  if(state.checkoutStep==='pay'){
-    const amount = cartTotal();
-    const upiLink = buildUpiLink(amount);
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiLink);
-    body.innerHTML = `
-      <div style="text-align:center;">
-        <div style="display:inline-flex;align-items:center;gap:6px;background:var(--ivory-deep);color:var(--maroon);font-weight:700;font-size:12px;padding:6px 14px;border-radius:999px;margin-bottom:10px;">
-          ${icon('clock',14)} Complete payment within <span id="payCountdown">10:00</span>
-        </div>
-        <div style="font-weight:700;font-size:15px;">Pay ₹${amount} via UPI</div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Scan with any UPI app, or tap the button below on your phone</div>
-        <img src="${qrUrl}" alt="UPI QR code" onclick="markPaymentAttempted()" style="width:190px;height:190px;margin:16px auto;border:2px solid var(--gold);border-radius:12px;background:#fff;padding:8px;cursor:pointer;">
-        <a class="btn btn-gold" href="${upiLink}" onclick="markPaymentAttempted()" style="width:100%;justify-content:center;margin-bottom:10px;">${icon('grid',15)} Open UPI App to Pay</a>
-        <div style="font-size:11px;color:var(--ink-soft);">Paying to: ${SHOP_UPI}</div>
+        <button class="btn btn-gold" id="payNowBtn" style="flex:2;justify-content:center;" onclick="goToPay()">${icon('grid',15)} Pay via UPI</button>
       </div>
-      <div style="margin-top:18px;padding:12px 14px;background:var(--ivory-deep);border-radius:10px;font-size:12px;color:var(--ink-soft);">
-        ${state.paymentAttempted
-          ? `Once your payment is complete, tap "I've Paid" below. Your order will show as <b>pending verification</b> — the shop checks and confirms each payment before it's marked as received.`
-          : `Tap "Open UPI App to Pay" above (or scan the QR code) to begin. The "I've Paid" confirmation button will appear here once you do.`}
-      </div>`;
-    foot.innerHTML = state.paymentAttempted ? `
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="state.checkoutStep='details';renderDrawer();">Back</button>
-        <button class="btn btn-gold" style="flex:2;justify-content:center;" onclick="confirmPaid()">${icon('check',15)} I've Paid</button>
-      </div>` : `
-      <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="state.checkoutStep='details';renderDrawer();">Back</button>`;
-    return;
-  }
-  if(state.checkoutStep==='expired'){
-    body.innerHTML = `
-      <div style="text-align:center;padding:50px 10px;">
-        <div class="medallion" style="width:56px;height:56px;margin:0 auto;"><div class="inner" style="width:44px;height:44px;color:var(--maroon);">${icon('clock',20)}</div></div>
-        <div style="font-weight:700;font-size:15px;margin-top:14px;">Payment window expired</div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;max-width:280px;margin-left:auto;margin-right:auto;">For your security, UPI payment sessions expire after 10 minutes. Your basket is still saved — just start the payment again.</div>
-      </div>`;
-    foot.innerHTML = `<button class="btn btn-gold" style="width:100%;justify-content:center;" onclick="retryPayment()">Try Again</button>`;
+      <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;">Opens a secure payment window — pay with any UPI app, scan a QR code, or enter your UPI ID.</div>`;
     return;
   }
   if(state.checkoutStep==='done'){
     const o = state.lastOrder;
-    const rows = o.items.map(it=>`
+    const rows = o.items.map(it=>{
+      const unitPrice = packPrice(it.price, it.weightG);
+      return `
       <tr>
-        <td style="padding:5px 0;">${it.name}</td>
-        <td style="padding:5px 0;text-align:center;">${it.qty}kg</td>
-        <td style="padding:5px 0;text-align:right;">₹${it.price}</td>
-        <td style="padding:5px 0;text-align:right;">₹${it.price*it.qty}</td>
-      </tr>`).join('');
+        <td style="padding:5px 0;">${it.name} <span style="color:var(--ink-soft);font-size:10.5px;">(${weightLabel(it.weightG)})</span></td>
+        <td style="padding:5px 0;text-align:center;">${it.packs}</td>
+        <td style="padding:5px 0;text-align:right;">₹${unitPrice}</td>
+        <td style="padding:5px 0;text-align:right;">₹${unitPrice*it.packs}</td>
+      </tr>`;
+    }).join('');
     body.innerHTML = `
       <div style="text-align:center;padding:20px 10px 6px;">
         <div class="medallion" style="width:56px;height:56px;margin:0 auto;"><div class="inner" style="width:44px;height:44px;color:var(--maroon);">${icon('check',20)}</div></div>
-        <div style="font-weight:700;font-size:15px;margin-top:12px;">Order submitted!</div>
-        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Thank you for shopping with us! Your official bill will be sent once the shop verifies your payment.</div>
+        <div style="font-weight:700;font-size:15px;margin-top:12px;">Payment received!</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Thank you for shopping with us! Your payment has been verified — the shop will start preparing your order.</div>
       </div>
       <div id="billArea" style="background:var(--card);border:1.5px solid var(--gold);border-radius:12px;padding:18px;margin-top:8px;">
         <div style="text-align:center;border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:10px;">
@@ -320,9 +308,9 @@ function renderDrawer(){
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
           <span>Order Summary #${o.id}</span>
-          <span style="background:rgba(212,175,55,0.25);color:var(--gold-deep);font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:999px;">Pending Verification</span>
+          <span style="background:rgba(46,125,50,0.15);color:#2e7d32;font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:999px;">Paid</span>
         </div>
-        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">${o.date}</div>
+        <div style="font-size:10.5px;color:var(--ink-soft);margin-bottom:10px;">${o.date}${o.paymentId ? ' · Payment ID: '+o.paymentId : ''}</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead><tr style="border-bottom:1.5px solid var(--line);color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;">
             <th style="text-align:left;padding-bottom:6px;font-weight:600;">Item</th>
@@ -345,12 +333,6 @@ function renderDrawer(){
     return;
   }
 }
-function buildUpiLink(amount){
-  const params = new URLSearchParams({
-    pa: SHOP_UPI, pn: SHOP_NAME_FOR_UPI, am: String(amount), cu: 'INR', tn: 'Order at ' + SHOP_NAME_FOR_UPI
-  });
-  return 'upi://pay?' + params.toString();
-}
 function buildWhatsappLink(text){
   const digits = SHOP_WHATSAPP.replace(/[^0-9]/g,'');
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
@@ -361,39 +343,6 @@ function renderShopLinks(){
   const enquire = document.getElementById('enquireBtn');
   if(enquire) enquire.href = buildWhatsappLink(`Hi ${SHOP_NAME_FOR_UPI}! I'd like to enquire about a bulk/wedding order.\nOccasion: \nApprox. quantity: `);
 }
-const PAYMENT_WINDOW_MS = 10*60*1000;
-let paymentTimerHandle = null;
-function startPaymentTimer(){
-  if(paymentTimerHandle) clearInterval(paymentTimerHandle);
-  state.payDeadline = Date.now() + PAYMENT_WINDOW_MS;
-  paymentTimerHandle = setInterval(()=>{
-    if(state.checkoutStep !== 'pay'){ clearInterval(paymentTimerHandle); paymentTimerHandle = null; return; }
-    const remaining = state.payDeadline - Date.now();
-    if(remaining <= 0){
-      clearInterval(paymentTimerHandle); paymentTimerHandle = null;
-      state.checkoutStep = 'expired';
-      renderDrawer();
-      return;
-    }
-    const el = document.getElementById('payCountdown');
-    if(el){
-      const m = Math.floor(remaining/60000);
-      const s = Math.floor((remaining%60000)/1000);
-      el.textContent = `${m}:${String(s).padStart(2,'0')}`;
-    }
-  }, 1000);
-}
-function retryPayment(){
-  state.checkoutStep = 'pay';
-  state.paymentAttempted = false;
-  startPaymentTimer();
-  renderDrawer();
-}
-function markPaymentAttempted(){
-  if(state.paymentAttempted) return;
-  state.paymentAttempted = true;
-  renderDrawer();
-}
 function goToPay(){
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
@@ -402,19 +351,95 @@ function goToPay(){
   state.customer = {name, phone, address};
   const existingProfile = loadCustomerProfile();
   saveCustomerProfile({name, phone, email: existingProfile ? existingProfile.email||'' : ''});
-  state.checkoutStep = 'pay';
-  state.paymentAttempted = false;
-  startPaymentTimer();
-  renderDrawer();
+  startRazorpayCheckout();
 }
-function confirmPaid(){
+function setPayButtonBusy(busy){
+  const btn = document.getElementById('payNowBtn');
+  if(!btn) return;
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Preparing payment…' : '';
+  if(!busy) btn.innerHTML = `${icon('grid',15)} Pay via UPI`;
+}
+async function startRazorpayCheckout(){
+  if(typeof Razorpay === 'undefined'){ showToast('Payment gateway failed to load. Please refresh and try again.'); return; }
+  setPayButtonBusy(true);
+  const amount = cartTotal();
+  let orderData;
+  try{
+    const orderRes = await fetch('/api/create-order', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amount, receipt: 'VSS' + Date.now() })
+    });
+    orderData = await orderRes.json();
+    if(!orderRes.ok || !orderData.orderId){
+      showToast(orderData.error || 'Could not start payment. Please try again.');
+      setPayButtonBusy(false);
+      return;
+    }
+  }catch(err){
+    showToast('Could not reach the payment gateway. Please check your connection and try again.');
+    setPayButtonBusy(false);
+    return;
+  }
+
+  const rzp = new Razorpay({
+    key: orderData.keyId,
+    amount: orderData.amount,
+    currency: orderData.currency,
+    order_id: orderData.orderId,
+    name: SHOP_NAME_FOR_UPI,
+    description: 'Order at ' + SHOP_NAME_FOR_UPI,
+    prefill: { name: state.customer.name, contact: state.customer.phone },
+    theme: { color: '#8a1c2b' },
+    config: {
+      display: {
+        blocks: {
+          upi: { name: 'Pay by UPI', instruments: [{ method: 'upi' }] }
+        },
+        sequence: ['block.upi'],
+        preferences: { show_default_blocks: false }
+      }
+    },
+    handler: function(response){ verifyAndCompleteOrder(response); },
+    modal: { ondismiss: function(){ setPayButtonBusy(false); } }
+  });
+  rzp.on('payment.failed', function(resp){
+    showToast('Payment failed: ' + (resp.error && resp.error.description ? resp.error.description : 'please try again'));
+    setPayButtonBusy(false);
+  });
+  rzp.open();
+}
+async function verifyAndCompleteOrder(response){
+  try{
+    const verifyRes = await fetch('/api/verify-payment', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature
+      })
+    });
+    const verifyData = await verifyRes.json();
+    if(!verifyRes.ok || !verifyData.verified){
+      showToast('We could not verify your payment. Please contact us with payment ID: ' + response.razorpay_payment_id);
+      setPayButtonBusy(false);
+      return;
+    }
+  }catch(err){
+    showToast('We could not verify your payment. Please contact us with payment ID: ' + response.razorpay_payment_id);
+    setPayButtonBusy(false);
+    return;
+  }
   const id = 'VSS' + Math.floor(1000 + Math.random()*9000);
   const order = {
     id, date: new Date().toLocaleString('en-IN'),
     customer: state.customer,
-    items: state.cart.map(l=>({ id:l.id, name:findItem(l.id).en, qty:l.qty, price:findItem(l.id).price })),
+    items: state.cart.map(l=>({ id:l.id, name:findItem(l.id).en, weightG:l.weightG, packs:l.packs, price:findItem(l.id).price })),
     total: cartTotal(),
-    status: 'pending_verification'
+    status: 'paid',
+    paymentId: response.razorpay_payment_id
   };
   saveOrder(order);
   state.lastOrder = order;
@@ -520,3 +545,8 @@ function renderSitePhotos(){
 function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderShopLinks(); renderDrawer(); }
 loadSharedData();
 renderAll();
+// Cloud copy (saved from admin) is what every customer should see; it overrides any local copy.
+fetch('/api/shop-data').then(r=>r.ok?r.json():null).then(d=>{
+  if(!d || !d.shop || !Array.isArray(d.sweets)) return;
+  applySharedData(d); renderAll();
+}).catch(()=>{});

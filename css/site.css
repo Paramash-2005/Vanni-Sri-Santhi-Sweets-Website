@@ -110,6 +110,9 @@ section{padding:64px 0;}
 .prod-ta{font-size:11px;color:var(--ink-soft);margin-top:1px;}
 .prod-price{font-family:'Cormorant Garamond',serif;font-weight:800;color:var(--maroon);font-size:18px;margin-top:10px;}
 .prod-price .unit{font-family:'Poppins',sans-serif;font-weight:500;color:var(--ink-soft);font-size:11px;}
+.weight-pills{display:flex;gap:6px;margin-top:10px;}
+.weight-pill{flex:1;border:1.5px solid var(--line);background:var(--ivory-deep);color:var(--ink-soft);border-radius:8px;padding:6px 4px;font-size:11.5px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;transition:all .15s;}
+.weight-pill.active{border-color:var(--gold-deep);background:var(--maroon);color:var(--gold-bright);}
 .prod-actions{display:flex;align-items:center;gap:8px;margin-top:12px;}
 .qty-stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;}
 .qty-stepper button{width:28px;height:32px;border:none;background:var(--ivory-deep);color:var(--maroon);}
