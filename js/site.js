@@ -143,14 +143,12 @@ function packPrice(pricePerKg, g){ return Math.round(pricePerKg*g/1000); }
   if(profile){ state.customer.name = profile.name||''; state.customer.phone = profile.phone||''; }
 })();
 
-const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
 // Product ids that have a real photo file at assets/products/<id>.jpg (visible to ALL customers).
 // Add an id here after dropping its photo into assets/products/.
 const PHOTO_FILES = new Set([]);
 function photoFill(key){
   const src=state.photos[key] || (PHOTO_FILES.has(key) ? `assets/products/${key}.jpg` : '');
   if(src) return `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
-  if(ILLUSTRATED_IDS.has(key)) return `<img src="assets/products/${key}.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" class="placeholder-illustration"><span class="illustration-tag">Illustration</span>`;
   return '';
 }
 

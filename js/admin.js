@@ -252,10 +252,8 @@ async function handlePhoto(e,key){
 }
 function setTab(t){ tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderItems(); }
 function currentList(){ return tab==='sweets'?data.sweets:data.savouries; }
-const ILLUSTRATED_IDS = new Set(['halwa','balcova','laddoo','jilebi','jangiri','mysorepak','milksweet','badhusha','burfi','mixture','muruku','spmixture','pakoda','thattai','sev','andhramuruku']);
 function itemThumb(id){
   if(data.photos[id]) return `<img src="${data.photos[id]}">`;
-  if(ILLUSTRATED_IDS.has(id)) return `<img src="assets/products/${id}.svg">`;
   return '📷';
 }
 function renderItems(){
