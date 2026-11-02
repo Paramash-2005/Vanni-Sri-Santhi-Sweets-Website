@@ -4,13 +4,13 @@
 // compressed JPEG from admin.html and stores it in Vercel Blob. Returns the
 // public URL, which admin.html saves into the shop data.
 //
-// Limits: each stored photo <= MAX_BYTES; all photos together <= 300 MB.
+// Limits: each stored photo <= MAX_BYTES; all photos together <= 1 GB.
 // Replacing a photo deletes its previous version so space is not wasted.
 // -----------------------------------------------------------------------
 import { put, list, del } from '@vercel/blob';
 
 const MAX_BYTES = 1024 * 1024;            // safety cap per stored photo (admin.js compresses to ~300KB)
-const TOTAL_LIMIT = 300 * 1024 * 1024;    // 300 MB overall photo storage
+const TOTAL_LIMIT = 1024 * 1024 * 1024;   // 1 GB overall photo storage
 
 async function listPhotos(prefix) {
   const out = [];
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     const old = all.filter(b => b.pathname.startsWith(`photos/${key}-`));
     const usedAfterReplace = all.reduce((s, b) => s + b.size, 0) - old.reduce((s, b) => s + b.size, 0);
     if (usedAfterReplace + buf.length > TOTAL_LIMIT) {
-      return res.status(413).json({ error: 'Photo storage is full (300 MB limit). Remove unused photos first.' });
+      return res.status(413).json({ error: 'Photo storage is full (1 GB limit). Remove unused photos first.' });
     }
     const blob = await put(`photos/${key}.jpg`, buf, {
       access: 'public',
