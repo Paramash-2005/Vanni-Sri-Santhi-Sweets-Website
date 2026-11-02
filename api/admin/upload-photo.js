@@ -4,13 +4,12 @@
 // compressed JPEG from admin.html and stores it in Vercel Blob. Returns the
 // public URL, which admin.html saves into the shop data.
 //
-// Limits: each stored photo <= MAX_BYTES. No total-storage cap in code
+// No photo-count, per-photo or total-storage cap in code
 // (only your Vercel plan's own Blob quota applies).
 // Replacing a photo deletes its previous version so space is not wasted.
 // -----------------------------------------------------------------------
 import { put, list, del } from '@vercel/blob';
 
-const MAX_BYTES = 1024 * 1024;            // safety cap per stored photo (admin.js compresses to ~300KB)
 
 async function listPhotos(prefix) {
   const out = [];
@@ -35,7 +34,6 @@ export default async function handler(req, res) {
   const m = typeof dataUrl === 'string' && dataUrl.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);
   if (!m) return res.status(400).json({ error: 'Photo must be a JPEG' });
   const buf = Buffer.from(m[1], 'base64');
-  if (buf.length > MAX_BYTES) return res.status(413).json({ error: 'Photo too large' });
   try {
     const all = await listPhotos('photos/');
     const old = all.filter(b => b.pathname.startsWith(`photos/${key}-`));

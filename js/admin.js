@@ -189,7 +189,6 @@ function renderPhotoGrid(){
 }
 /* ---- Photo storage: compress before saving so localStorage (~5MB) never fills up ---- */
 const PHOTO_MAX_DIM = 1400;         // longest side in px (sharp on phones and desktops)
-const PHOTO_SOURCE_MAX = 5 * 1024 * 1024; // max size of the file you pick: 5 MB
 const PHOTO_MAX_BYTES = 300 * 1024; // stored size per photo after compression
 const STORAGE_LIMIT = 5 * 1024 * 1024; // typical browser localStorage quota (~5MB)
 
@@ -227,19 +226,10 @@ function storageUsedBytes(){
 }
 function updateStorageMeter(){
   const el = document.getElementById('storageMeter'); if(!el) return;
-  // Estimate what the saved data would take (UTF-16 = 2 bytes/char), replacing the old copy
-  let old = 0; try{ old = ((localStorage.getItem(STORAGE_KEY)||'').length + STORAGE_KEY.length) * 2; }catch(e){}
-  const used = storageUsedBytes() - old + (JSON.stringify(data).length + STORAGE_KEY.length) * 2;
-  const pct = Math.min(100, Math.round(used / (STORAGE_LIMIT*2) * 100)); // quota is ~5M chars = ~10MB UTF-16
-  el.textContent = `Photo storage: ${pct}% used` + (pct>=80 ? ' — almost full, remove unused photos' : '');
-  el.style.color = pct>=80 ? '#B3261E' : '#7A5A3A';
+  el.textContent = ''; // no photo storage limit
 }
 async function handlePhoto(e,key){
   const file=e.target.files[0]; if(!file) return;
-  if(file.size > PHOTO_SOURCE_MAX){
-    showToast(`That photo is ${(file.size/1048576).toFixed(1)} MB. The limit is 5 MB per photo — pick a smaller one.`);
-    e.target.value=''; return;
-  }
   let dataUrl;
   try{ dataUrl = await compressImage(file); }
   catch(err){ showToast('Could not read that image (iPhone HEIC files are not supported — use JPG, PNG or WebP).'); return; }

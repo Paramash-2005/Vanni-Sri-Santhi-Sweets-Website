@@ -94,4 +94,4 @@ Photos and edits made in admin.html are saved to Vercel Blob so **every customer
 2. Vercel adds `BLOB_READ_WRITE_TOKEN` automatically. Never paste it into code or commit it.
 3. Redeploy. Open admin.html, upload photos, press **Save All Changes**.
 Notes: admin API routes (`/api/admin/*`) are protected by the same ADMIN_PASSWORD as admin.html. Only product photos and shop prices are stored — no customer or order data.
-Limits: each photo you pick can be up to 5 MB (it is compressed to ~300 KB before upload); there is no total photo limit in the code (only your Vercel plan's Blob quota applies). Replacing a photo deletes the old copy automatically.
+No photo size or total-storage limit in the code (photos are auto-resized for fast loading; only your Vercel plan's Blob quota applies). Replacing a photo deletes the old copy automatically.
