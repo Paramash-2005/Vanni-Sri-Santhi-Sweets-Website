@@ -9,12 +9,13 @@
 // Old versions are never auto-deleted (prevents missing images from stale pages).
 // -----------------------------------------------------------------------
 import { put } from '@vercel/blob';
+import { blobToken } from '../../lib/blob-token.js';
 
 
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!blobToken()) {
     return res.status(503).json({ error: 'Storage not configured. Create a Blob store in Vercel (see README).' });
   }
   const { key, dataUrl } = req.body || {};
@@ -28,6 +29,7 @@ export default async function handler(req, res) {
     // Old files are intentionally NEVER deleted: a stale admin page or cached
     // copy may still reference them, and a deleted file = a broken/missing image.
     const blob = await put(`photos/${key}.jpg`, buf, {
+      token: blobToken(),
       access: 'public',
       contentType: 'image/jpeg',
       addRandomSuffix: true, // new URL each upload, so browsers never show a stale photo

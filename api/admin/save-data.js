@@ -4,10 +4,11 @@
 // details, items, prices, photo URLs) as one small JSON file in Vercel Blob.
 // -----------------------------------------------------------------------
 import { put, list } from '@vercel/blob';
+import { blobToken } from '../../lib/blob-token.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!blobToken()) {
     return res.status(503).json({ error: 'Storage not configured. Create a Blob store in Vercel (see README).' });
   }
   const body = req.body || {};
@@ -22,7 +23,7 @@ export default async function handler(req, res) {
   // Merge with the photos already published, so an admin page that loaded
   // incompletely can never wipe every other photo. New values win per key.
   try {
-    const { blobs } = await list({ prefix: 'shop-data.json', limit: 1 });
+    const { blobs } = await list({ prefix: 'shop-data.json', limit: 1, token: blobToken() });
     if (blobs.length) {
       const existing = await (await fetch(blobs[0].url + '?t=' + Date.now())).json();
       for (const [k, v] of Object.entries(existing.photos || {})) {
@@ -37,6 +38,7 @@ export default async function handler(req, res) {
   if (json.length > 200 * 1024) return res.status(413).json({ error: 'Data too large' });
   try {
     await put('shop-data.json', json, {
+      token: blobToken(),
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,

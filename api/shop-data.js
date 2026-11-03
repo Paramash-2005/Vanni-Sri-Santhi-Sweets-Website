@@ -5,12 +5,13 @@
 // Data lives in Vercel Blob storage (see README: "Photo & data storage").
 // -----------------------------------------------------------------------
 import { list } from '@vercel/blob';
+import { blobToken } from '../lib/blob-token.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return res.status(200).json({});
+  if (!blobToken()) return res.status(200).json({});
   try {
-    const { blobs } = await list({ prefix: 'shop-data.json', limit: 1 });
+    const { blobs } = await list({ prefix: 'shop-data.json', limit: 1, token: blobToken() });
     if (!blobs.length) return res.status(200).json({});
     const r = await fetch(blobs[0].url + '?t=' + Date.now());
     const json = await r.json();
