@@ -6,7 +6,7 @@
 //
 // No photo-count, per-photo or total-storage cap in code
 // (only your Vercel plan's own Blob quota applies).
-// Replacing a photo deletes its previous version so space is not wasted.
+// Old versions are deleted on a later upload, once the live site no longer uses them.
 // -----------------------------------------------------------------------
 import { put, list, del } from '@vercel/blob';
 
@@ -36,7 +36,17 @@ export default async function handler(req, res) {
   const buf = Buffer.from(m[1], 'base64');
   try {
     const all = await listPhotos('photos/');
-    const old = all.filter(b => b.pathname.startsWith(`photos/${key}-`));
+    // Never delete a file the live site still points to (it is only replaced
+    // once "Save All Changes" publishes the new URL); older leftovers are cleaned up.
+    let published = new Set();
+    try {
+      const { blobs } = await list({ prefix: 'shop-data.json', limit: 1 });
+      if (blobs.length) {
+        const cur = await (await fetch(blobs[0].url + '?t=' + Date.now())).json();
+        published = new Set(Object.values(cur.photos || {}));
+      }
+    } catch (e) { console.error('published lookup error:', e); }
+    const old = all.filter(b => b.pathname.startsWith(`photos/${key}-`) && !published.has(b.url));
     const usedAfterReplace = all.reduce((s, b) => s + b.size, 0) - old.reduce((s, b) => s + b.size, 0);
     const blob = await put(`photos/${key}.jpg`, buf, {
       access: 'public',

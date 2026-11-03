@@ -3,7 +3,7 @@
 // ADMIN ONLY (password-checked by middleware.js). Saves shop data (shop
 // details, items, prices, photo URLs) as one small JSON file in Vercel Blob.
 // -----------------------------------------------------------------------
-import { put } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -18,6 +18,19 @@ export default async function handler(req, res) {
   const photos = {};
   for (const [k, v] of Object.entries(body.photos || {})) {
     if (/^[a-zA-Z0-9_]{1,60}$/.test(k) && typeof v === 'string' && v.startsWith('https://')) photos[k] = v;
+  }
+  // Merge with the photos already published, so an admin page that loaded
+  // incompletely can never wipe every other photo. New values win per key.
+  try {
+    const { blobs } = await list({ prefix: 'shop-data.json', limit: 1 });
+    if (blobs.length) {
+      const existing = await (await fetch(blobs[0].url + '?t=' + Date.now())).json();
+      for (const [k, v] of Object.entries(existing.photos || {})) {
+        if (!(k in photos) && typeof v === 'string' && v.startsWith('https://')) photos[k] = v;
+      }
+    }
+  } catch (err) {
+    console.error('photo merge error (continuing with submitted photos):', err);
   }
   const clean = { shop: body.shop, sweets: body.sweets, savouries: body.savouries, photos };
   const json = JSON.stringify(clean);
