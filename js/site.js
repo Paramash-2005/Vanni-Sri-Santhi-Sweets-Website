@@ -153,8 +153,20 @@ function photoFill(key){
 }
 
 function setTab(t){ state.tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderProducts(); }
-function changeQty(id,d){ state.qty[id]=Math.max(0,(state.qty[id]||0)+d); renderProducts(); }
-function setWeight(id,g){ state.weight[id]=g; renderProducts(); }
+// Update ONE card in place (never rebuild the grid) so photos don't reload or flicker.
+function updateCard(id){
+  const card=document.querySelector(`#prodGrid .prod-card[data-id="${id}"]`);
+  const it=findItem(id);
+  if(!card||!it){ renderProducts(); return; }
+  const g=state.weight[id]||DEFAULT_WEIGHT, q=state.qty[id]||0;
+  card.querySelector('[data-role="qty"]').textContent=q;
+  card.querySelector('[data-role="price"]').innerHTML=`₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span>`;
+  card.querySelectorAll('[data-role="pills"] .weight-pill').forEach((b,i)=>b.classList.toggle('active',WEIGHT_OPTIONS[i]===g));
+  const add=card.querySelector('[data-role="add"]');
+  add.disabled=q<1; add.style.cssText=q<1?'opacity:.5;cursor:not-allowed;':'';
+}
+function changeQty(id,d){ state.qty[id]=Math.max(0,(state.qty[id]||0)+d); updateCard(id); }
+function setWeight(id,g){ state.weight[id]=g; updateCard(id); }
 function addToCart(id){
   const weightG = state.weight[id]||DEFAULT_WEIGHT;
   const packs = state.qty[id]||0;
@@ -163,7 +175,7 @@ function addToCart(id){
   if(existing){ existing.packs+=packs; } else { state.cart.push({id, weightG, packs}); }
   state.qty[id]=0;
   showToast('Added '+findItem(id).en+' ('+weightLabel(weightG)+') to basket');
-  renderProducts();
+  updateCard(id);
   renderCartBadge(); renderDrawer();
 }
 function changeCartQty(idx,d){ state.cart[idx].packs+=d; if(state.cart[idx].packs<=0) state.cart.splice(idx,1); renderCartBadge(); renderDrawer(); }
@@ -201,23 +213,23 @@ function renderProducts(){
   document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>{
     const g = state.weight[it.id]||DEFAULT_WEIGHT;
     return `
-    <div class="prod-card" style="animation-delay:${idx*0.06}s">
+    <div class="prod-card" data-id="${it.id}" style="animation-delay:${idx*0.06}s">
       ${it.best?`<span class="tag-best">Bestseller</span>`:''}
       <div class="photo-slot prod-thumb">${photoFill(it.id)}</div>
       <div class="prod-body">
         <div class="prod-en">${it.en}</div>
         <div class="prod-ta ta">${it.ta}</div>
-        <div class="prod-price">₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span></div>
-        <div class="weight-pills">
+        <div class="prod-price" data-role="price">₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span></div>
+        <div class="weight-pills" data-role="pills">
           ${WEIGHT_OPTIONS.map(w=>`<button class="weight-pill ${g===w?'active':''}" onclick="setWeight('${it.id}',${w})">${weightLabel(w)}</button>`).join('')}
         </div>
         <div class="prod-actions">
           <div class="qty-stepper">
             <button onclick="changeQty('${it.id}',-1)">${icon('minus',12)}</button>
-            <div class="val">${state.qty[it.id]||0}</div>
+            <div class="val" data-role="qty">${state.qty[it.id]||0}</div>
             <button onclick="changeQty('${it.id}',1)">${icon('plus',12)}</button>
           </div>
-          <button class="btn-add" ${(state.qty[it.id]||0)<1?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="addToCart('${it.id}')">Add to Cart</button>
+          <button class="btn-add" data-role="add" ${(state.qty[it.id]||0)<1?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="addToCart('${it.id}')">Add to Cart</button>
         </div>
       </div>
     </div>`;

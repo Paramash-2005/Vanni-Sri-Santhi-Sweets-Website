@@ -30,7 +30,7 @@ const knowledgeBase = [
 /* Product chunks are built from the live catalogue in site.js (which admin edits can change),
    so prices and pack sizes in answers always match what the shop page shows. */
 const PRODUCT_NOTES = {
-  halwa: "Our signature sweet, made from wheat starch extract, pure ghee, sugar, and roasted cashews, slow-cooked in copper vessels.",
+  halwa: "Our signature sweet, made from wheat starch extract, pure ghee, sugar, and roasted cashews, slow-cooked and stirred by hand in small batches.",
   mixture: "A savoury blend of sev, boondi, roasted peanuts, curry leaves and spices, fried fresh daily.",
   balcova: "Balcova (Palkova) is a milk-based sweet made by slow-reducing fresh cow's milk with sugar into a soft, granular fudge. Contains dairy."
 };
