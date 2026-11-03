@@ -146,6 +146,7 @@ function saveLocalCopy(){
   return false;
 }
 async function saveAll(){
+  if(pendingUploads>0){ showError('A photo is still uploading — wait a moment, then press Save again.'); return; }
   data.shop.city = document.getElementById('fCity').value || data.shop.city;
   data.shop.phone = document.getElementById('fPhone').value || data.shop.phone;
   data.shop.hours = document.getElementById('fHours').value || data.shop.hours;
@@ -228,12 +229,20 @@ function updateStorageMeter(){
   const el = document.getElementById('storageMeter'); if(!el) return;
   el.textContent = ''; // no photo storage limit
 }
+let pendingUploads = 0;
+const sessionPhotos = {}; // photos uploaded in this session; never lost to a late cloud load
+function showError(msg){
+  const host=document.getElementById('toastHost');
+  host.innerHTML = `<div class="toast" style="background:#b00020;color:#fff;">${msg}</div>`;
+  setTimeout(()=>{ host.innerHTML=''; }, 12000);
+}
 async function handlePhoto(e,key){
   const file=e.target.files[0]; if(!file) return;
   let dataUrl;
   try{ dataUrl = await compressImage(file); }
   catch(err){ showToast('Could not read that image (iPhone HEIC files are not supported — use JPG, PNG or WebP).'); return; }
   showToast('Uploading photo…');
+  pendingUploads++;
   try{
     const r = await fetch('/api/admin/upload-photo', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
@@ -242,12 +251,12 @@ async function handlePhoto(e,key){
     const j = await r.json();
     if(!r.ok) throw new Error(j.error || 'Upload failed');
     data.photos[key] = j.url; // public URL in cloud storage (tiny; no browser storage used)
+    sessionPhotos[key] = j.url;
     showToast('Photo uploaded. Press "Save All Changes" to publish.');
   }catch(err){
-    // Server storage not available (e.g. opened as a local file): keep a local preview only
-    data.photos[key] = dataUrl;
-    showToast('Cloud upload failed (' + err.message + '). Saved on this browser only.');
-  }
+    // A local-only photo is dropped on save, so don't pretend it worked.
+    showError('Photo NOT saved — upload failed: ' + err.message + '. Please try again.');
+  }finally{ pendingUploads--; }
   renderPhotoGrid(); renderItems(); updateStorageMeter();
 }
 function setTab(t){ tab=t; document.getElementById('tabSweets').classList.toggle('active',t==='sweets'); document.getElementById('tabSavouries').classList.toggle('active',t==='savouries'); renderItems(); }
@@ -294,8 +303,9 @@ renderItems();
 renderOrders();
 updateStorageMeter();
 // Prefer the cloud copy (what customers see) over this browser's copy
-fetch('/api/shop-data').then(r=>r.ok?r.json():null).then(d=>{
+fetch('/api/shop-data?fresh=1',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
   if(!d || !d.shop || !Array.isArray(d.sweets)) return;
   data = Object.assign(data, d); if(!data.photos) data.photos = {};
+  Object.assign(data.photos, sessionPhotos);
   fillShopForm(); renderPhotoGrid(); renderItems(); updateStorageMeter();
 }).catch(()=>{});

@@ -14,7 +14,8 @@ export default async function handler(req, res) {
     if (!blobs.length) return res.status(200).json({});
     const r = await fetch(blobs[0].url + '?t=' + Date.now());
     const json = await r.json();
-    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    // Admin asks with ?fresh=1 and must never get a cached (stale) copy.
+    res.setHeader('Cache-Control', req.query && req.query.fresh ? 'no-store' : 'public, s-maxage=30, stale-while-revalidate=60');
     return res.status(200).json(json);
   } catch (err) {
     console.error('shop-data error:', err);
