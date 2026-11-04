@@ -40,18 +40,26 @@
 .cd-box b{display:block;font-family:'Cormorant Garamond',serif;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;}
 .cd-box span{font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;}
 
-/* row 2: three identical cards, same width, same height, same baseline */
-.hamper-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;align-items:stretch;position:relative;}
-.hamper{position:relative;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--card),var(--ivory-deep));color:var(--ink);
-  border:2px solid var(--gold);border-radius:8px;padding:44px 26px 26px;text-align:center;
-  box-shadow:0 14px 30px rgba(0,0,0,.32),inset 0 0 0 5px var(--card),inset 0 0 0 6px rgba(150,115,26,.55);transition:box-shadow .25s ease;}
-.hamper:hover{box-shadow:0 20px 38px rgba(0,0,0,.4),inset 0 0 0 5px var(--card),inset 0 0 0 6px var(--gold-deep);}
-.hamper-no{position:absolute;top:-19px;left:50%;margin-left:-19px;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;line-height:1;color:var(--maroon-deep);background:linear-gradient(180deg,var(--gold-bright),var(--gold));border:2px solid var(--gold-deep);box-shadow:0 4px 8px rgba(0,0,0,.3);}
-.hamper h3{font-size:25px;line-height:1.15;color:var(--maroon);}
-.hamper .ta{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
-.hamper h3+.ta:after{content:'';display:block;width:60px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold-deep),transparent);}
-.hamper p{font-size:13.5px;line-height:1.65;color:var(--ink);margin:14px 0 22px;flex:1;}
+/* row 2: three identical carved panels (aged bronze-maroon, gold frame, line-art emblem in a temple-niche arch) */
+.hamper-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;align-items:stretch;position:relative;}
+.hamper{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:30px 26px 40px;border-radius:10px;
+  background:
+    radial-gradient(ellipse at 50% 0,rgba(242,215,126,.16),transparent 60%),
+    linear-gradient(180deg,#5a1626,#3a0c18);
+  border:2px solid var(--gold);box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 0 0 5px #3a0c18,inset 0 0 0 6px rgba(212,175,55,.6);transition:box-shadow .25s ease;overflow:hidden;}
+.hamper:hover{box-shadow:0 22px 42px rgba(0,0,0,.5),inset 0 0 0 5px #3a0c18,inset 0 0 0 6px var(--gold-bright);}
+/* carved diamond frieze along the bottom edge */
+.hamper:after{content:'';position:absolute;left:12px;right:12px;bottom:12px;height:16px;opacity:.85;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16'%3E%3Cpath d='M12 2L22 8 12 14 2 8z' fill='none' stroke='%23D4AF37' stroke-width='1.2'/%3E%3Ccircle cx='12' cy='8' r='1.6' fill='%23D4AF37'/%3E%3C/svg%3E") center/24px 16px repeat-x;}
+.hamper-emblem{width:132px;height:112px;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);border-radius:66px 66px 8px 8px;
+  background:radial-gradient(circle at 50% 35%,rgba(242,215,126,.22),rgba(0,0,0,.25) 75%);box-shadow:inset 0 0 0 4px rgba(0,0,0,.25),inset 0 0 0 5px rgba(212,175,55,.5);}
+.hamper-emblem svg{width:92px;height:78px;fill:none;stroke:var(--gold-bright);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(242,215,126,.35));}
+.hamper-no{margin-top:14px;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;letter-spacing:3px;color:var(--gold);position:static;}
+.hamper-no:before,.hamper-no:after{content:'—';margin:0 8px;opacity:.6;}
+.hamper h3{font-size:26px;line-height:1.15;color:var(--gold-bright);margin-top:6px;}
+.hamper .ta{font-size:12.5px;color:var(--gold-bright);opacity:.85;margin-top:4px;}
+.hamper h3+.ta:after{content:'';display:block;width:60px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.hamper p{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.9);margin:14px 0 22px;flex:1;}
 .hamper .btn{align-self:center;margin-top:auto;}
 
 @media (max-width:920px){
