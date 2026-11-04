@@ -211,7 +211,8 @@ function renderTrust(){
     </div>`).join('');
 }
 function renderProducts(){
-  const list = state.tab==='sweets'?SWEETS:SAVOURIES;
+  // Items marked Best (admin) are listed first; the sort is stable so the rest keep their order.
+  const list = (state.tab==='sweets'?SWEETS:SAVOURIES).slice().sort((a,b)=>(b.best?1:0)-(a.best?1:0));
   document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>{
     const g = state.weight[it.id]||DEFAULT_WEIGHT;
     return `

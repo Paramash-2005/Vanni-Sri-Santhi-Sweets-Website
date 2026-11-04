@@ -7,11 +7,9 @@ html[data-season="pongal"]{--maroon:#7A3A0A;--maroon-deep:#4A2105;--maroon-soft:
 html[data-season="puthandu"]{--maroon:#0B4A55;--maroon-deep:#062E36;--maroon-soft:#11677A;}
 html[data-season="christmas"] .lights i:nth-child(3n+1){background:#e63946;}
 html[data-season="christmas"] .lights i:nth-child(3n+2){background:#3ddc84;}
-html[data-season="christmas"] .lantern b{background:linear-gradient(180deg,#ff6b6b,#c1121f 70%,#7a0c14);border-radius:50%;height:36px;}
 html[data-season="pongal"] .lights i{background:#ffc93c;}
 html[data-season="pongal"] .lights i:nth-child(3n+1){background:#8bc34a;}
 html[data-season="pongal"] .lights i:nth-child(3n+2){background:#ff9f1c;}
-html[data-season="puthandu"] .lantern b{background:linear-gradient(180deg,#ffd166,#e0a030 70%,#9a6b12);}
 
 /* ---------- Aged-paper ground (one small tiled texture, not fixed → no scroll cost) ---------- */
 body{
@@ -52,11 +50,9 @@ footer:before{
 
 /* ---------- Festival band: ornamental inner border ---------- */
 .festive .wrap{position:relative;}
-.festive:after{content:'';position:absolute;inset:44px 14px 44px;border:1px solid rgba(212,175,55,.35);border-radius:6px;pointer-events:none;}
 
 @media (max-width:720px){
   .section-head .eyebrow:before,.section-head .eyebrow:after{width:18px;}
-  .festive:after{inset:40px 6px;}
   .story-photo{box-shadow:none;}
 }
 @media print{body{background-image:none;}}

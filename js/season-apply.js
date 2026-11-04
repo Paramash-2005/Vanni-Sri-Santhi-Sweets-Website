@@ -29,7 +29,6 @@
       $('festTa').textContent = S.fta;
       $('festCopy').textContent = S.copy;
       $('cdLabel').textContent = S.count;
-      document.querySelectorAll('.lantern').forEach(function (l) { l.hidden = !S.lanterns; });
       $('hamperRow').innerHTML = S.hampers.map(function (m, i) {
         return '<article class="hamper' + (i === 1 ? ' hamper-hero' : '') + ' reveal">' +
           '<span class="hamper-no">0' + (i + 1) + '</span>' +
