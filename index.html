@@ -14,8 +14,11 @@
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/festive.css">
 </head>
 <body>
 
@@ -59,16 +62,18 @@
 </header>
 
 <section class="hero" id="top">
-  <canvas id="emberCanvas" class="ember-canvas"></canvas>
+  <canvas id="emberCanvas" class="ember-canvas" aria-hidden="true"></canvas>
+  <div class="lights" id="lights" aria-hidden="true"></div>
   <div class="hero-inner wrap">
     <div>
+      <div class="fest-badge"><span class="flame"></span>Deepavali Special · தீபாவளி சிறப்பு</div>
       <div class="eyebrow" style="color:var(--gold-bright);" id="heroEyebrow">Est. 2004 · Tirunelveli, Tamil Nadu</div>
-      <h1 id="heroHeading"><span class="hw">Excellence</span> <span class="hw">in</span> <span class="hw">Every</span> <span class="hw">Bite</span><br><span class="hw">of</span> <span class="hw">Heritage</span> <span class="hw">Sweets</span></h1>
-      <div class="ta">பாரம்பரிய இனிப்புகளின் சுவை</div>
+      <h1 id="heroHeading"><span class="hw">Light</span> <span class="hw">Up</span> <span class="hw">Your</span> <span class="hw">Deepavali</span><br><span class="hw">with</span> <span class="hw">Heritage</span> <span class="hw">Sweets</span></h1>
+      <div class="ta">இனிய தீபாவளி நல்வாழ்த்துக்கள்</div>
       <p>Vannai Sri Santhi Sweets &amp; Bakery has been hand-making Tirunelveli's favourite halwa, mixture and balcova since 2004 — fresh in-house, no shortcuts, no preservatives. Now shipping across Tamil Nadu and all of India.</p>
       <div class="hero-ctas">
-        <a class="btn btn-gold" href="#bestsellers">Shop Best Sellers</a>
-        <a class="btn btn-ghost" href="#bulk">Bulk &amp; Festival Orders</a>
+        <a class="btn btn-gold" href="#deepavali">Deepavali Gift Boxes</a>
+        <a class="btn btn-ghost" href="#bestsellers">Shop Best Sellers</a>
       </div>
     </div>
     <div>
@@ -78,6 +83,54 @@
 </section>
 
 <div class="jali" role="presentation"></div>
+
+<section class="festive" id="deepavali">
+  <div class="lantern l1" aria-hidden="true"><i></i><b></b></div>
+  <div class="lantern l2" aria-hidden="true"><i></i><b></b></div>
+  <div class="lantern l3" aria-hidden="true"><i></i><b></b></div>
+  <div class="wrap">
+    <div class="fest-top">
+      <div class="fest-copy reveal">
+        <div class="eyebrow">Deepavali Collection</div>
+        <h2 class="serif">Sweets That Make the Festival Shine</h2>
+        <div class="ta">தீபாவளி இனிப்புப் பெட்டிகள்</div>
+        <p>Fresh-made halwa, balcova, mysorepak and crisp savouries, packed into festive boxes for your family and the ones far away. Order early — festival days book up fast.</p>
+      </div>
+      <div class="countdown reveal" id="countdown" role="timer" aria-live="off">
+        <div class="cd-title"><svg class="diya" viewBox="0 0 64 48" aria-hidden="true"><path class="flame-svg" d="M32 4c5 7 7 11 4 16-2 3-6 3-8 0-3-5-1-9 4-16z"/><path d="M4 26h56c0 12-12 20-28 20S4 38 4 26z" fill="#D4AF37" stroke="#96731A" stroke-width="2"/><path d="M10 28h44" stroke="#F2D77E" stroke-width="2"/></svg> Deepavali begins in</div>
+        <div class="cd-row">
+          <div class="cd-box"><b id="cdD">--</b><span>Days</span></div>
+          <div class="cd-box"><b id="cdH">--</b><span>Hours</span></div>
+          <div class="cd-box"><b id="cdM">--</b><span>Mins</span></div>
+          <div class="cd-box"><b id="cdS">--</b><span>Secs</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="hamper-row reveal-group">
+      <article class="hamper reveal">
+        <span class="hamper-no">01</span>
+        <h3 class="serif">The Sweet Box</h3>
+        <div class="ta">இனிப்புப் பெட்டி</div>
+        <p>Tirunelveli Halwa, Balcova and Mysorepak — the festival classics.</p>
+        <a class="btn btn-gold" data-wa="Hi! I'd like to order the Deepavali Sweet Box (Halwa, Balcova, Mysorepak).&#10;Quantity: " href="#" target="_blank" rel="noopener">Enquire</a>
+      </article>
+      <article class="hamper hamper-hero reveal">
+        <span class="hamper-no">02</span>
+        <h3 class="serif">The Grand Combo</h3>
+        <div class="ta">சிறப்புக் கலவைப் பெட்டி</div>
+        <p>Sweets and savouries together — our favourite way to gift a whole family.</p>
+        <a class="btn btn-gold" data-wa="Hi! I'd like to order the Deepavali Grand Combo (sweets + savouries).&#10;Quantity: " href="#" target="_blank" rel="noopener">Enquire</a>
+      </article>
+      <article class="hamper reveal">
+        <span class="hamper-no">03</span>
+        <h3 class="serif">The Savoury Box</h3>
+        <div class="ta">காரப் பெட்டி</div>
+        <p>Mixture, Muruku and Thattai, crisp and fresh for the festival table.</p>
+        <a class="btn btn-gold" data-wa="Hi! I'd like to order the Deepavali Savoury Box (Mixture, Muruku, Thattai).&#10;Quantity: " href="#" target="_blank" rel="noopener">Enquire</a>
+      </article>
+    </div>
+  </div>
+</section>
 
 <section id="categories">
   <div class="wrap">
@@ -128,26 +181,12 @@
 </section>
 
 <section id="story">
-  <div class="story-pin-wrap" id="storyPinWrap">
-    <div class="story-pin-inner wrap">
-      <div class="photo-slot story-photo arch" id="storyPhotoSlot"></div>
-      <div class="story-beats">
-        <div class="story-beat" data-beat="1">
-          <div class="eyebrow">Since 2004</div>
-          <h2 class="serif">Two Decades of Tirunelveli's Own Sweets</h2>
-          <p>What began as a small family kitchen in Tirunelveli has grown into a name locals trust — one simple reason: everything we sell, we make ourselves.</p>
-        </div>
-        <div class="story-beat" data-beat="2">
-          <div class="eyebrow">Own-Made, Always</div>
-          <h2 class="serif">No Shortcuts, No Store-Bought Mixes</h2>
-          <p>Halwa, Mixture and Balcova, made fresh every single day in small batches, stirred by hand and tasted by the family before it ever reaches your box.</p>
-        </div>
-        <div class="story-beat" data-beat="3">
-          <div class="eyebrow">Now Shipping Pan-India</div>
-          <h2 class="serif">Home-Made, Wherever Home Is</h2>
-          <p>Today we ship across Tamil Nadu and all of India, so families far from home can still taste something made the traditional way.</p>
-        </div>
-      </div>
+  <div class="wrap story">
+    <div class="photo-slot story-photo arch" id="storyPhotoSlot"></div>
+    <div>
+      <div class="eyebrow">Since 2004</div>
+      <h2 class="serif">Two Decades of Tirunelveli's Own Sweets</h2>
+      <p>What began as a small family kitchen in Tirunelveli has grown into a name locals trust — one simple reason: everything we sell, we make ourselves.</p>
     </div>
   </div>
 </section>
@@ -220,8 +259,8 @@
 
 <div id="toastHost"></div>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="js/site.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+<script src="js/site.js" defer></script>
 
 <!-- ===== AI Assistant (RAG demo) ===== -->
 <button class="chat-fab" id="chatFab" onclick="toggleChat(true)">
@@ -257,11 +296,12 @@
 
 <link rel="stylesheet" href="css/chat-widget.css">
 
-<script src="js/chat-widget.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="js/effects.js"></script>
+<script src="js/chat-widget.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="js/effects.js" defer></script>
+<script src="js/festive.js" defer></script>
 </body>
 </html>
 

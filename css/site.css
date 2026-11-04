@@ -167,10 +167,14 @@ footer{background:var(--maroon-deep);color:#e8d9b8;padding-top:56px;}
 @media (prefers-reduced-motion: reduce){.marquee-track{animation:none;}}
 
 /* ---------- Hero word reveal ---------- */
-.hw{display:inline-block;opacity:0;transform:translateY(100%);}
+.hw{display:inline-block;opacity:0;transform:translateY(60%);animation:hwIn .7s cubic-bezier(.22,.9,.32,1) forwards;}
+.hw:nth-of-type(1){animation-delay:.25s}.hw:nth-of-type(2){animation-delay:.32s}.hw:nth-of-type(3){animation-delay:.39s}
+.hw:nth-of-type(4){animation-delay:.46s}.hw:nth-of-type(5){animation-delay:.53s}.hw:nth-of-type(6){animation-delay:.6s}.hw:nth-of-type(7){animation-delay:.67s}
+@keyframes hwIn{to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.hw{animation:none;opacity:1;transform:none;}}
 
 /* ---------- Card tilt + shine sweep ---------- */
-.cat-card, .prod-card{position:relative;overflow:hidden;transform-style:preserve-3d;transition:transform .25s ease, box-shadow .25s ease;}
+.cat-card, .prod-card{position:relative;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease;}
 .cat-card:before, .prod-card:before{
   content:'';position:absolute;top:0;left:-150%;width:60%;height:100%;
   background:linear-gradient(115deg, transparent, rgba(255,255,255,0.35), transparent);
@@ -197,18 +201,8 @@ footer{background:var(--maroon-deep);color:#e8d9b8;padding-top:56px;}
 .ember-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.65;z-index:1;}
 .hero-inner{position:relative;z-index:2;}
 
-/* Pinned scrollytelling story section */
-.story-pin-wrap{height:300vh;position:relative;}
-.story-pin-inner{position:sticky;top:0;height:100vh;display:grid;grid-template-columns:1fr 1.1fr;gap:50px;align-items:center;overflow:hidden;}
-.story-beats{position:relative;height:220px;}
-.story-beat{position:absolute;inset:0;opacity:0;}
-.story-beat.active{opacity:1;}
-.story-beat h2{font-family:'Cormorant Garamond',serif;font-size:30px;}
-.story-beat p{margin-top:14px;color:var(--ink-soft);font-size:14px;line-height:1.75;max-width:440px;}
 @media (max-width:920px){
-  .story-pin-wrap{height:auto;}
-  .story-pin-inner{position:static;height:auto;grid-template-columns:1fr;padding:44px 22px;}
-  .story-beat{position:relative;opacity:1;margin-bottom:36px;}
+  .story{grid-template-columns:1fr;gap:28px;}
   nav.mainnav{display:none;}
   .burger{display:block;}
   .hero-inner{grid-template-columns:1fr;padding:44px 22px;}

@@ -148,7 +148,9 @@ function packPrice(pricePerKg, g){ return Math.round(pricePerKg*g/1000); }
 const PHOTO_FILES = new Set([]);
 function photoFill(key){
   const src=state.photos[key] || (PHOTO_FILES.has(key) ? `assets/products/${key}.jpg` : '');
-  if(src) return `<img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
+  // Hero photo loads immediately; everything else lazy-loads and decodes off the main thread.
+  const load = key==='hero' ? 'eager" fetchpriority="high' : 'lazy';
+  if(src) return `<img src="${src}" alt="" loading="${load}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`;
   return '';
 }
 
@@ -352,6 +354,7 @@ function renderShopLinks(){
   if(social) social.innerHTML = `<a href="${SHOP_INSTAGRAM}" target="_blank" rel="noopener">${icon('instagram',14)}</a><a href="${buildWhatsappLink('Hi '+SHOP_NAME_FOR_UPI+'! I had a question about your sweets.')}" target="_blank" rel="noopener">${icon('whatsapp',14)}</a>`;
   const enquire = document.getElementById('enquireBtn');
   if(enquire) enquire.href = buildWhatsappLink(`Hi ${SHOP_NAME_FOR_UPI}! I'd like to enquire about a bulk/wedding order.\nOccasion: \nApprox. quantity: `);
+  document.querySelectorAll('[data-wa]').forEach(a=>{ a.href = buildWhatsappLink(a.dataset.wa); });
 }
 function goToPay(){
   const name = document.getElementById('custName').value.trim();
@@ -379,7 +382,10 @@ async function startRazorpayCheckout(){
     const orderRes = await fetch('/api/create-order', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ amount, receipt: 'VSS' + Date.now() })
+      body: JSON.stringify({
+        items: state.cart.map(l=>({ id:l.id, weightG:l.weightG, packs:l.packs })),
+        receipt: 'VSS' + Date.now()
+      })
     });
     orderData = await orderRes.json();
     if(!orderRes.ok || !orderData.orderId){
