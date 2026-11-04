@@ -85,7 +85,6 @@ function applySharedData(data){
     if(s.city) { document.getElementById('heroEyebrow').textContent = `Est. ${s.since||'2004'} · ${s.city}`; document.getElementById('footAddress').textContent = s.city; }
     if(s.phone){ document.getElementById('footPhone').textContent = s.phone; document.getElementById('callBtn').setAttribute('onclick', `location.href='tel:${s.phone.replace(/\s/g,'')}'`); }
     if(s.hours) document.getElementById('footHours').textContent = s.hours;
-    if(s.upi) SHOP_UPI = s.upi;
     if(s.nameEn) SHOP_NAME_FOR_UPI = s.nameEn;
     if(s.whatsapp) SHOP_WHATSAPP = s.whatsapp;
     if(s.instagram) SHOP_INSTAGRAM = s.instagram;
@@ -114,7 +113,6 @@ function getTrust(){
 }
 
 /* ---------- STATE ---------- */
-let SHOP_UPI = 'balasweetparamash-1@okaxis';
 let SHOP_NAME_FOR_UPI = 'Vannai Sri Santhi Sweets';
 let SHOP_WHATSAPP = '+919443555772';
 let SHOP_INSTAGRAM = 'https://www.instagram.com/vannai_sri_santhi_sweets';
@@ -290,9 +288,9 @@ function renderDrawer(){
       <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:14px;"><span>Total</span><span>₹${cartTotal()}</span></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline" style="flex:1;justify-content:center;" onclick="state.checkoutStep='cart';renderDrawer();">Back</button>
-        <button class="btn btn-gold" id="payNowBtn" style="flex:2;justify-content:center;" onclick="goToPay()">${icon('grid',15)} Pay via UPI</button>
+        <button class="btn btn-gold" id="payNowBtn" style="flex:2;justify-content:center;" onclick="goToPay()">${icon('grid',15)} Pay Securely</button>
       </div>
-      <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;">Opens a secure payment window — pay with any UPI app, scan a QR code, or enter your UPI ID.</div>`;
+      <div style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:8px;">Opens Razorpay's secure payment window — pay by UPI, card, net banking or wallet.</div>`;
     return;
   }
   if(state.checkoutStep==='done'){
@@ -371,7 +369,7 @@ function setPayButtonBusy(busy){
   if(!btn) return;
   btn.disabled = busy;
   btn.textContent = busy ? 'Preparing payment…' : '';
-  if(!busy) btn.innerHTML = `${icon('grid',15)} Pay via UPI`;
+  if(!busy) btn.innerHTML = `${icon('grid',15)} Pay Securely`;
 }
 async function startRazorpayCheckout(){
   if(typeof Razorpay === 'undefined'){ showToast('Payment gateway failed to load. Please refresh and try again.'); return; }
@@ -408,15 +406,6 @@ async function startRazorpayCheckout(){
     description: 'Order at ' + SHOP_NAME_FOR_UPI,
     prefill: { name: state.customer.name, contact: state.customer.phone },
     theme: { color: '#8a1c2b' },
-    config: {
-      display: {
-        blocks: {
-          upi: { name: 'Pay by UPI', instruments: [{ method: 'upi' }] }
-        },
-        sequence: ['block.upi'],
-        preferences: { show_default_blocks: false }
-      }
-    },
     handler: function(response){ verifyAndCompleteOrder(response); },
     modal: { ondismiss: function(){ setPayButtonBusy(false); } }
   });
