@@ -4,8 +4,10 @@
 (function () {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---------- Deepavali date (edit once a year). 2026: Sunday 8 November ----------
-  const DEEPAVALI = new Date('2026-11-08T00:00:00+05:30').getTime();
+  // Active festival comes from seasons.js (window.VANNAI_SEASON). Outside festivals: classic look, no effects.
+  const S = window.VANNAI_SEASON || { festival: false, effect: 'none' };
+  if (!S.festival) return;
+  const TARGET = S.target;
 
   // ---------- String lights ----------
   const lights = document.getElementById('lights');
@@ -24,9 +26,9 @@
     const pad = (v) => String(v).padStart(2, '0');
     let timer = 0;
     const tickCd = () => {
-      const diff = DEEPAVALI - Date.now();
+      const diff = TARGET - Date.now();
       if (diff <= 0) {
-        box.innerHTML = '<div class="cd-title">Happy Deepavali! · இனிய தீபாவளி நல்வாழ்த்துக்கள்</div>';
+        box.innerHTML = '<div class="cd-title"></div>'; box.firstChild.textContent = S.done;
         clearInterval(timer);
         return;
       }
@@ -42,7 +44,7 @@
 
   // ---------- Fireworks ----------
   const canvas = document.getElementById('emberCanvas');
-  if (!canvas || reduce) return;
+  if (!canvas || reduce || S.effect === 'none') return;
   const hero = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const COLORS = ['255,214,102', '255,140,66', '255,99,132', '255,245,214', '120,220,255', '170,255,160'];
@@ -84,7 +86,29 @@
     if (sparks.length > MAX_SPARKS) sparks.splice(0, sparks.length - MAX_SPARKS);
   }
 
+  // Falling particles for non-cracker festivals: snow (Christmas) or marigold petals (Pongal, Puthandu)
+  const FALL = S.effect === 'snow' || S.effect === 'petals';
+  const FALL_COLORS = S.effect === 'snow' ? ['255,255,255', '225,240,255'] : ['255,170,40', '255,200,70', '255,120,60'];
+  const flakes = [];
+  if (FALL) for (let i = 0; i < 55; i++) flakes.push({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() * 2.5, s: 0.4 + Math.random() * 0.8, p: Math.random() * 6.28, c: FALL_COLORS[i % FALL_COLORS.length] });
+
+  function frameFall() {
+    raf = 0;
+    ctx.clearRect(0, 0, w, h);
+    for (const f of flakes) {
+      f.y += f.s * 0.0022 * (h > 0 ? 400 / h : 1); f.p += 0.02;
+      if (f.y > 1.05) { f.y = -0.05; f.x = Math.random(); }
+      const x = (f.x + Math.sin(f.p) * 0.015) * w, y = f.y * h;
+      ctx.fillStyle = `rgba(${f.c},0.8)`;
+      ctx.beginPath();
+      if (S.effect === 'snow') ctx.arc(x, y, f.r, 0, 6.283); else ctx.ellipse(x, y, f.r * 1.6, f.r * 0.8, f.p, 0, 6.283);
+      ctx.fill();
+    }
+    schedule();
+  }
+
   function frame(t) {
+    if (FALL) return frameFall();
     raf = 0;
     // fade previous frame -> trails, while staying transparent over the hero gradient
     ctx.globalCompositeOperation = 'destination-out';
@@ -122,7 +146,7 @@
   });
 
   // tap / click the hero background to light a cracker there
-  hero.addEventListener('click', (e) => {
+  if (!FALL) hero.addEventListener('click', (e) => {
     if (e.target.closest('a,button,input')) return;
     launch(e.clientX - hero.getBoundingClientRect().left);
     schedule();

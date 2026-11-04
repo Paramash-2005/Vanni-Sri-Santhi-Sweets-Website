@@ -41,7 +41,7 @@
 
   // ---------- Marquee strip ----------
   const marqueeTrack = document.getElementById('marqueeTrack');
-  if (marqueeTrack) {
+  if (marqueeTrack && !marqueeTrack.children.length) { // normally filled by season-apply.js
     const items = [
       'Happy Deepavali · இனிய தீபாவளி', 'Deepavali Gift Boxes', 'Tirunelveli Halwa', 'Mixture & Balcova',
       'No Preservatives', 'Ships Across Tamil Nadu & India', 'Bulk & Festival Orders Welcome',

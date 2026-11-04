@@ -1,0 +1,64 @@
+/* heritage.css — antique / temple-craft finishing + per-festival colour themes.
+   Theme is chosen automatically by js/seasons.js (<html data-season="...">). Remove this file to return to the plain look. */
+
+/* ---------- Festival colour themes: only the three "deep" brand colours change ---------- */
+html[data-season="christmas"]{--maroon:#0E3B2C;--maroon-deep:#07241A;--maroon-soft:#165A43;}
+html[data-season="pongal"]{--maroon:#7A3A0A;--maroon-deep:#4A2105;--maroon-soft:#A4510F;}
+html[data-season="puthandu"]{--maroon:#0B4A55;--maroon-deep:#062E36;--maroon-soft:#11677A;}
+html[data-season="christmas"] .lights i:nth-child(3n+1){background:#e63946;}
+html[data-season="christmas"] .lights i:nth-child(3n+2){background:#3ddc84;}
+html[data-season="christmas"] .lantern b{background:linear-gradient(180deg,#ff6b6b,#c1121f 70%,#7a0c14);border-radius:50%;height:36px;}
+html[data-season="pongal"] .lights i{background:#ffc93c;}
+html[data-season="pongal"] .lights i:nth-child(3n+1){background:#8bc34a;}
+html[data-season="pongal"] .lights i:nth-child(3n+2){background:#ff9f1c;}
+html[data-season="puthandu"] .lantern b{background:linear-gradient(180deg,#ffd166,#e0a030 70%,#9a6b12);}
+
+/* ---------- Aged-paper ground (one small tiled texture, not fixed → no scroll cost) ---------- */
+body{
+  background-color:var(--ivory);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .38 0 0 0 0 .12 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:var(--gold);color:var(--maroon-deep);}
+:focus-visible{outline:2px solid var(--gold-deep);outline-offset:3px;border-radius:4px;}
+
+/* ---------- Ornamented headings: eyebrow flanked by rules, flourish under section titles ---------- */
+.section-head{text-align:center;}
+.section-head .eyebrow{display:inline-flex;align-items:center;gap:12px;}
+.section-head .eyebrow:before,.section-head .eyebrow:after{content:'';width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-deep));}
+.section-head .eyebrow:after{transform:scaleX(-1);}
+.section-head h2:after{
+  content:'';display:block;width:150px;height:16px;margin:12px auto 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='16'%3E%3Cpath d='M0 8h58M92 8h58' stroke='%2396731A' stroke-width='1'/%3E%3Cpath d='M75 1l6 7-6 7-6-7z' fill='%23D4AF37' stroke='%2396731A'/%3E%3Ccircle cx='62' cy='8' r='2' fill='%2396731A'/%3E%3Ccircle cx='88' cy='8' r='2' fill='%2396731A'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* ---------- Double-frame cards, like a carved temple panel ---------- */
+.cat-card,.prod-card{outline:1px solid rgba(150,115,26,.35);outline-offset:-8px;}
+.cat-card:hover,.prod-card:hover{box-shadow:0 18px 40px rgba(46,7,19,.18),inset 0 0 0 3px rgba(212,175,55,.3);}
+
+/* ---------- Header: fine gold double rule ---------- */
+header{border-bottom:1px solid var(--gold);box-shadow:0 3px 0 -1px var(--ivory),0 4px 0 -1px var(--gold-deep);}
+nav.mainnav a{letter-spacing:.4px;}
+
+/* ---------- Story block: framed portrait with offset gold shadow-frame ---------- */
+.story-photo{position:relative;box-shadow:12px 12px 0 -2px var(--ivory),12px 12px 0 0 var(--gold);}
+
+/* ---------- Footer: scalloped top edge ---------- */
+footer{position:relative;}
+footer:before{
+  content:'';position:absolute;left:0;right:0;top:-1px;height:14px;pointer-events:none;
+  background:radial-gradient(circle at 10px 0,var(--ivory) 9px,transparent 10px) 0 0/20px 14px repeat-x;
+}
+
+/* ---------- Festival band: ornamental inner border ---------- */
+.festive .wrap{position:relative;}
+.festive:after{content:'';position:absolute;inset:44px 14px 44px;border:1px solid rgba(212,175,55,.35);border-radius:6px;pointer-events:none;}
+
+@media (max-width:720px){
+  .section-head .eyebrow:before,.section-head .eyebrow:after{width:18px;}
+  .festive:after{inset:40px 6px;}
+  .story-photo{box-shadow:none;}
+}
+@media print{body{background-image:none;}}
+
+[hidden]{display:none!important;}
