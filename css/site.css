@@ -214,6 +214,32 @@ footer{background:var(--maroon-deep);color:#e8d9b8;padding-top:56px;}
   .foot-grid{grid-template-columns:1fr 1fr;}
 }
 
+/* ---- Phones (Android + iOS) ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-tap-highlight-color:transparent;}
+html,body{overflow-x:clip;}
+.foot-grid>*,.prod-grid>*,.cat-grid>*,.trust-grid>*{min-width:0;}
+.foot-col a,.foot-col div{overflow-wrap:anywhere;}
+@media (max-width:920px){
+  .foot-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .foot-grid>:first-child{grid-column:1/-1;}
+}
+@media (max-width:560px){
+  .prod-grid{gap:12px;}
+  .prod-body{padding:12px;}
+  .btn{min-height:44px;justify-content:center;}
+  .hero-inner{padding:36px 18px;}
+  .hero h1{font-size:28px;}
+  .drawer,.chat-drawer{width:100%;max-width:100%;right:-105%;height:100vh;height:100dvh;}
+  .drawer-body,.chat-drawer{padding-bottom:env(safe-area-inset-bottom,0px);}
+  .chat-fab{bottom:calc(16px + env(safe-area-inset-bottom,0px));right:16px;}
+}
+@media (hover:none) and (pointer:coarse){
+  .qty-stepper button{width:40px;height:40px;}
+  .qty-stepper .val{width:34px;}
+  .burger{padding:10px;}
+  input,select,textarea{font-size:16px;} /* stops iOS Safari zooming on focus */
+}
+
 /* ---- Printable bill ---- */
 @media print{
   body *{visibility:hidden;}
