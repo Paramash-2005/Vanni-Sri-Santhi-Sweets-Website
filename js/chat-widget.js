@@ -76,7 +76,7 @@ async function generateAnswer(query, chunks){
     const data = await response.json();
     return data.reply || "Sorry, I couldn't generate a response just now.";
   }catch(err){
-    return "This assistant needs its backend connected to answer live — see api-chat-example.js for the server function to deploy alongside this site. Meanwhile, here's what I found in our records: " + (chunks[0] ? chunks[0].text : "please contact the shop directly.");
+    return (chunks[0] ? "Here is what I found in our records: " + chunks[0].text : "I couldn't find that in our records.") + " For anything else, please call or WhatsApp the shop and we'll help you directly.";
   }
 }
 

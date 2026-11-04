@@ -25,6 +25,21 @@
 // same code to any OpenAI-compatible provider by changing the URL and key.
 // -----------------------------------------------------------------------
 
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+let cachedModel = null;
+
+async function pickAvailableModel(headers) {
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/models', { headers });
+    if (!r.ok) return null;
+    const ids = ((await r.json()).data || []).filter((m) => m.active !== false).map((m) => m.id);
+    const chat = ids.filter((id) => !/whisper|guard|tts|prompt-guard|orpheus|embed/i.test(id));
+    const prefer = [/llama-3\.3-70b/i, /gpt-oss-120b/i, /llama.*70b/i, /gpt-oss-20b/i, /llama-3\.1-8b/i, /llama/i];
+    for (const re of prefer) { const hit = chat.find((id) => re.test(id)); if (hit) return hit; }
+    return chat[0] || null;
+  } catch (e) { console.error('Groq model list error:', e); return null; }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -46,21 +61,23 @@ CONTEXT:
 ${context || '(no matching records found)'}`;
 
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    const ask = (model) => fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers,
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 500,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: query }
-        ]
+        model, max_tokens: 500, temperature: 0.3,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: query }]
       })
     });
+
+    let response = await ask(cachedModel || process.env.GROQ_MODEL || DEFAULT_MODEL);
+
+    // Groq retires models from time to time. If ours is gone, ask Groq which chat models the key can use,
+    // pick one automatically, and remember it for the life of this server instance.
+    if (response.status === 404 || response.status === 400) {
+      const fallback = await pickAvailableModel(headers);
+      if (fallback) { cachedModel = fallback; response = await ask(fallback); }
+    }
 
     if (!response.ok) {
       const errText = await response.text();
