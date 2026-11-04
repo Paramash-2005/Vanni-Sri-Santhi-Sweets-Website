@@ -62,6 +62,29 @@
 .hamper p{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.9);margin:14px 0 22px;flex:1;}
 .hamper .btn{align-self:center;margin-top:auto;}
 
+/* ---- each box has its own character ---- */
+/* 01 Yaazh: aged bronze-maroon, temple-niche arch (base style above) */
+/* 02 Gopuram: raised parchment-gold panel, stepped temple-tower crown, dark ink text */
+.hamper:nth-child(2){margin-top:-14px;margin-bottom:14px;padding-top:44px;border-radius:4px 4px 10px 10px;
+  background:radial-gradient(ellipse at 50% 0,rgba(255,255,255,.35),transparent 60%),linear-gradient(180deg,#f2d77e,#d4af37 60%,#96731a);
+  border:2px solid #5a3d08;box-shadow:0 22px 40px rgba(0,0,0,.5),inset 0 0 0 5px #f2d77e,inset 0 0 0 6px #5a3d08;
+  clip-path:polygon(0 18px,14% 18px,14% 9px,32% 9px,32% 0,68% 0,68% 9px,86% 9px,86% 18px,100% 18px,100% 100%,0 100%);}
+.hamper:nth-child(2) .hamper-emblem{border-radius:8px;border-color:#5a3d08;background:rgba(58,12,24,.9);box-shadow:inset 0 0 0 4px #3a0c18,inset 0 0 0 5px rgba(242,215,126,.6);}
+.hamper:nth-child(2) .hamper-no{color:#5a3d08;}
+.hamper:nth-child(2) h3{color:#3a0c18;}
+.hamper:nth-child(2) .ta{color:#5a3d08;opacity:1;}
+.hamper:nth-child(2) h3+.ta:after{background:linear-gradient(90deg,transparent,#5a3d08,transparent);}
+.hamper:nth-child(2) p{color:#3a0c18;}
+.hamper:nth-child(2):after{filter:brightness(.4);}
+.hamper:nth-child(2) .btn{background:#3a0c18;color:var(--gold-bright);border-color:#3a0c18;}
+/* 03 Lotus: deep peacock-teal, scalloped edge, round medallion */
+.hamper:nth-child(3){border-radius:26px 26px 10px 10px;
+  background:radial-gradient(ellipse at 50% 0,rgba(242,215,126,.2),transparent 60%),linear-gradient(180deg,#0f4a4a,#082d30);
+  border:2px dashed var(--gold);box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 0 0 5px #082d30,inset 0 0 0 6px rgba(212,175,55,.6);}
+.hamper:nth-child(3) .hamper-emblem{width:124px;height:124px;border-radius:50%;border-style:double;border-width:5px;}
+.hamper:nth-child(3):after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16'%3E%3Cpath d='M0 14Q12 -2 24 14' fill='none' stroke='%23D4AF37' stroke-width='1.2'/%3E%3C/svg%3E");}
+@media (max-width:920px){.hamper:nth-child(2){margin:0;}}
+
 @media (max-width:920px){
   .fest-top{grid-template-columns:minmax(0,1fr);gap:28px;margin-bottom:40px;}
   .hamper-row{grid-template-columns:minmax(0,1fr);gap:34px;}
