@@ -252,7 +252,7 @@
   <div class="drawer-head">
     <div>
       <h3 class="serif">Ask Vannai Sri Santhi</h3>
-      <div class="chat-sub">AI Assistant · RAG-powered</div>
+      <div class="chat-sub">AI Assistant</div>
     </div>
     <button class="close-x" onclick="toggleChat(false)"></button>
   </div>
@@ -271,8 +271,6 @@
     <input type="text" id="userInput" placeholder="Ask about our sweets, orders, hours..." onkeydown="if(event.key==='Enter')sendMessage()">
     <button class="btn-add" id="sendBtn" onclick="sendMessage()" style="flex:0 0 auto;padding:0 16px;">Ask</button>
   </div>
-  <div class="kb-toggle"><button onclick="toggleKB()">📋 View knowledge base (what the AI retrieves from)</button></div>
-  <div id="kbPanel"></div>
 </div>
 
 <link rel="stylesheet" href="css/chat-widget.css">

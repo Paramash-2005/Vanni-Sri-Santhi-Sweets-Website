@@ -94,15 +94,14 @@ function appendUserMsg(text){
 function appendBotMsg(text, chunks){
   const div = document.createElement('div');
   div.className = 'msg bot';
-  const receiptsHtml = chunks && chunks.length
-    ? `<div class="chat-receipts">${chunks.map(c=>`<div class="chat-receipt"><b>${c.tag}</b>${c.text.slice(0,80)}...</div>`).join('')}</div>` : '';
+  const receiptsHtml = ''; // retrieved-record snippets are internal; not shown to customers
   div.innerHTML = `<span class="chat-label">Assistant</span><div class="chat-bubble"></div>${receiptsHtml}`;
   div.querySelector('.chat-bubble').textContent = text;
   chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
 }
 function appendTyping(){
   const div = document.createElement('div'); div.className='msg bot'; div.id='typingIndicator';
-  div.innerHTML = `<span class="chat-label">Assistant</span><div class="chat-typing">retrieving &amp; thinking...</div>`;
+  div.innerHTML = `<span class="chat-label">Assistant</span><div class="chat-typing">typing...</div>`;
   chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
 }
 function removeTyping(){ const t=document.getElementById('typingIndicator'); if(t) t.remove(); }

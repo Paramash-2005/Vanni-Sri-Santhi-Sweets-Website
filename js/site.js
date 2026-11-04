@@ -3,6 +3,7 @@ const ICON_PATHS = {
   phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
   cart:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>',
   menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
   x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
   plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
@@ -133,7 +134,7 @@ function clearCustomerProfile(){ try{ localStorage.removeItem(CUSTOMER_KEY); }ca
 let state = { tab:'sweets', cart:[], photos:{}, qty:{}, weight:{}, checkoutStep:'cart', customer:{name:'',phone:'',address:''} };
 const WEIGHT_OPTIONS = [250, 500, 1000];
 const DEFAULT_WEIGHT = WEIGHT_OPTIONS[0];
-ALL.forEach(i=>{ state.qty[i.id]=0; state.weight[i.id]=DEFAULT_WEIGHT; });
+ALL.forEach(i=>{ state.qty[i.id]=1; state.weight[i.id]=DEFAULT_WEIGHT; });
 function weightLabel(g){ return g<1000 ? g+'g' : '1kg'; }
 function packPrice(pricePerKg, g){ return Math.round(pricePerKg*g/1000); }
 (function(){
@@ -158,26 +159,27 @@ function updateCard(id){
   const card=document.querySelector(`#prodGrid .prod-card[data-id="${id}"]`);
   const it=findItem(id);
   if(!card||!it){ renderProducts(); return; }
-  const g=state.weight[id]||DEFAULT_WEIGHT, q=state.qty[id]||0;
+  const g=state.weight[id]||DEFAULT_WEIGHT, q=state.qty[id]||1;
   card.querySelector('[data-role="qty"]').textContent=q;
   card.querySelector('[data-role="price"]').innerHTML=`₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span>`;
   card.querySelectorAll('[data-role="pills"] .weight-pill').forEach((b,i)=>b.classList.toggle('active',WEIGHT_OPTIONS[i]===g));
   const add=card.querySelector('[data-role="add"]');
   add.disabled=q<1; add.style.cssText=q<1?'opacity:.5;cursor:not-allowed;':'';
 }
-function changeQty(id,d){ state.qty[id]=Math.max(0,(state.qty[id]||0)+d); updateCard(id); }
+function changeQty(id,d){ state.qty[id]=Math.max(1,(state.qty[id]||1)+d); updateCard(id); }
 function setWeight(id,g){ state.weight[id]=g; updateCard(id); }
 function addToCart(id){
   const weightG = state.weight[id]||DEFAULT_WEIGHT;
-  const packs = state.qty[id]||0;
+  const packs = state.qty[id]||1;
   if(packs<1){ showToast('Select a quantity first'); return; }
   const existing=state.cart.find(l=>l.id===id && l.weightG===weightG);
   if(existing){ existing.packs+=packs; } else { state.cart.push({id, weightG, packs}); }
-  state.qty[id]=0;
+  state.qty[id]=1;
   showToast('Added '+findItem(id).en+' ('+weightLabel(weightG)+') to basket');
   updateCard(id);
   renderCartBadge(); renderDrawer();
 }
+function removeCartLine(idx){ const l=state.cart[idx]; if(!l) return; state.cart.splice(idx,1); showToast('Removed '+findItem(l.id).en+' from basket'); renderCartBadge(); renderDrawer(); }
 function changeCartQty(idx,d){ state.cart[idx].packs+=d; if(state.cart[idx].packs<=0) state.cart.splice(idx,1); renderCartBadge(); renderDrawer(); }
 function cartTotal(){ return state.cart.reduce((s,l)=>s+packPrice(findItem(l.id).price,l.weightG)*l.packs,0); }
 function cartCount(){ return state.cart.reduce((s,l)=>s+l.packs,0); }
@@ -226,10 +228,10 @@ function renderProducts(){
         <div class="prod-actions">
           <div class="qty-stepper">
             <button onclick="changeQty('${it.id}',-1)">${icon('minus',12)}</button>
-            <div class="val" data-role="qty">${state.qty[it.id]||0}</div>
+            <div class="val" data-role="qty">${state.qty[it.id]||1}</div>
             <button onclick="changeQty('${it.id}',1)">${icon('plus',12)}</button>
           </div>
-          <button class="btn-add" data-role="add" ${(state.qty[it.id]||0)<1?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="addToCart('${it.id}')">Add to Cart</button>
+          <button class="btn-add" data-role="add"  onclick="addToCart('${it.id}')">Add to Cart</button>
         </div>
       </div>
     </div>`;
@@ -261,12 +263,14 @@ function renderDrawer(){
         <div style="flex:1;">
           <div style="font-weight:700;font-size:13.5px;">${it.en}</div>
           <div style="font-size:11px;color:var(--ink-soft);">${weightLabel(line.weightG)} pack · ₹${unitPrice} each</div>
+          <div style="font-size:12px;font-weight:700;color:var(--maroon);margin-top:2px;">₹${unitPrice*line.packs}</div>
         </div>
         <div class="qty-stepper">
-          <button onclick="changeCartQty(${idx},-1)">${icon('minus',12)}</button>
+          <button onclick="changeCartQty(${idx},-1)" aria-label="Decrease quantity">${icon('minus',12)}</button>
           <div class="val">${line.packs}</div>
-          <button onclick="changeCartQty(${idx},1)">${icon('plus',12)}</button>
+          <button onclick="changeCartQty(${idx},1)" aria-label="Increase quantity">${icon('plus',12)}</button>
         </div>
+        <button class="remove-line" onclick="removeCartLine(${idx})" aria-label="Remove ${it.en} from basket" title="Remove">${icon('trash',16)}</button>
       </div>`;
     }).join('');
     foot.innerHTML = `
