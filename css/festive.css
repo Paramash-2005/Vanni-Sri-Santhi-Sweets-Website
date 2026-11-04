@@ -52,7 +52,7 @@
 .hamper-emblem:before{content:'';position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(242,215,126,.55);animation:spin 60s linear infinite;}
 .hamper-emblem svg{width:70px;height:60px;fill:none;stroke:var(--gold-bright);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .hamper-no{position:static;order:-1;margin-bottom:14px;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:700;letter-spacing:4px;color:var(--gold);}
-.hamper h3{font-size:25px;line-height:1.15;color:var(--gold-bright);margin-top:16px;}
+.hamper h3{font-size:25px;line-height:1.15;color:var(--gold-bright);margin-top:6px;}
 .hamper .ta{font-size:12.5px;color:var(--gold-bright);opacity:.85;margin-top:4px;}
 .hamper h3+.ta:after{content:'';display:block;width:54px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
 .hamper p{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.88);margin:14px 0 22px;flex:1;}
