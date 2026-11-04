@@ -40,55 +40,47 @@
 .cd-box b{display:block;font-family:'Cormorant Garamond',serif;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;}
 .cd-box span{font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;}
 
-/* row 2: three identical carved panels (aged bronze-maroon, gold frame, line-art emblem in a temple-niche arch) */
-.hamper-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;align-items:stretch;position:relative;}
-.hamper{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:30px 26px 40px;border-radius:10px;
-  background:
-    radial-gradient(ellipse at 50% 0,rgba(242,215,126,.16),transparent 60%),
-    linear-gradient(180deg,#5a1626,#3a0c18);
-  border:2px solid var(--gold);box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 0 0 5px #3a0c18,inset 0 0 0 6px rgba(212,175,55,.6);transition:box-shadow .25s ease;overflow:hidden;}
-.hamper:hover{box-shadow:0 22px 42px rgba(0,0,0,.5),inset 0 0 0 5px #3a0c18,inset 0 0 0 6px var(--gold-bright);}
-/* carved diamond frieze along the bottom edge */
-.hamper:after{content:'';position:absolute;left:12px;right:12px;bottom:12px;height:16px;opacity:.85;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16'%3E%3Cpath d='M12 2L22 8 12 14 2 8z' fill='none' stroke='%23D4AF37' stroke-width='1.2'/%3E%3Ccircle cx='12' cy='8' r='1.6' fill='%23D4AF37'/%3E%3C/svg%3E") center/24px 16px repeat-x;}
-.hamper-emblem{width:132px;height:112px;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);border-radius:66px 66px 8px 8px;
-  background:radial-gradient(circle at 50% 35%,rgba(242,215,126,.22),rgba(0,0,0,.25) 75%);box-shadow:inset 0 0 0 4px rgba(0,0,0,.25),inset 0 0 0 5px rgba(212,175,55,.5);}
-.hamper-emblem svg{width:92px;height:78px;fill:none;stroke:var(--gold-bright);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(242,215,126,.35));}
-.hamper-no{margin-top:14px;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;letter-spacing:3px;color:var(--gold);position:static;}
-.hamper-no:before,.hamper-no:after{content:'—';margin:0 8px;opacity:.6;}
-.hamper h3{font-size:26px;line-height:1.15;color:var(--gold-bright);margin-top:6px;}
+/* row 2: three boxes of one family (dark glass on the maroon band, thin gold line frames), each with its own shape + ornament */
+.hamper-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px;align-items:stretch;position:relative;}
+.hamper{--line:rgba(242,215,126,.55);position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;padding:38px 28px 34px;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.22));
+  border:1px solid var(--line);outline:1px solid rgba(212,175,55,.3);outline-offset:-10px;
+  box-shadow:0 18px 36px rgba(0,0,0,.35);backdrop-filter:blur(2px);transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease;}
+.hamper:hover{transform:translateY(-6px);border-color:var(--gold-bright);box-shadow:0 26px 44px rgba(0,0,0,.45),0 0 26px rgba(242,215,126,.18);}
+.hamper-emblem{width:104px;height:104px;display:flex;align-items:center;justify-content:center;border-radius:50%;position:relative;
+  background:radial-gradient(circle,rgba(242,215,126,.2),rgba(242,215,126,0) 70%);}
+.hamper-emblem:before{content:'';position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(242,215,126,.55);animation:spin 60s linear infinite;}
+.hamper-emblem svg{width:70px;height:60px;fill:none;stroke:var(--gold-bright);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.hamper-no{position:static;order:-1;margin-bottom:14px;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:700;letter-spacing:4px;color:var(--gold);}
+.hamper h3{font-size:25px;line-height:1.15;color:var(--gold-bright);margin-top:16px;}
 .hamper .ta{font-size:12.5px;color:var(--gold-bright);opacity:.85;margin-top:4px;}
-.hamper h3+.ta:after{content:'';display:block;width:60px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-.hamper p{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.9);margin:14px 0 22px;flex:1;}
+.hamper h3+.ta:after{content:'';display:block;width:54px;height:1px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.hamper p{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.88);margin:14px 0 22px;flex:1;}
 .hamper .btn{align-self:center;margin-top:auto;}
 
-/* ---- each box has its own character ---- */
-/* 01 Yaazh: aged bronze-maroon, temple-niche arch (base style above) */
-/* 02 Gopuram: raised parchment-gold panel, stepped temple-tower crown, dark ink text */
-.hamper:nth-child(2){margin-top:-14px;margin-bottom:14px;padding-top:44px;border-radius:4px 4px 10px 10px;
-  background:radial-gradient(ellipse at 50% 0,rgba(255,255,255,.35),transparent 60%),linear-gradient(180deg,#f2d77e,#d4af37 60%,#96731a);
-  border:2px solid #5a3d08;box-shadow:0 22px 40px rgba(0,0,0,.5),inset 0 0 0 5px #f2d77e,inset 0 0 0 6px #5a3d08;
-  clip-path:polygon(0 18px,14% 18px,14% 9px,32% 9px,32% 0,68% 0,68% 9px,86% 9px,86% 18px,100% 18px,100% 100%,0 100%);}
-.hamper:nth-child(2) .hamper-emblem{border-radius:8px;border-color:#5a3d08;background:rgba(58,12,24,.9);box-shadow:inset 0 0 0 4px #3a0c18,inset 0 0 0 5px rgba(242,215,126,.6);}
-.hamper:nth-child(2) .hamper-no{color:#5a3d08;}
-.hamper:nth-child(2) h3{color:#3a0c18;}
-.hamper:nth-child(2) .ta{color:#5a3d08;opacity:1;}
-.hamper:nth-child(2) h3+.ta:after{background:linear-gradient(90deg,transparent,#5a3d08,transparent);}
-.hamper:nth-child(2) p{color:#3a0c18;}
-.hamper:nth-child(2):after{filter:brightness(.4);}
-.hamper:nth-child(2) .btn{background:#3a0c18;color:var(--gold-bright);border-color:#3a0c18;}
-/* 03 Lotus: deep peacock-teal, scalloped edge, round medallion */
-.hamper:nth-child(3){border-radius:26px 26px 10px 10px;
-  background:radial-gradient(ellipse at 50% 0,rgba(242,215,126,.2),transparent 60%),linear-gradient(180deg,#0f4a4a,#082d30);
-  border:2px dashed var(--gold);box-shadow:0 16px 34px rgba(0,0,0,.4),inset 0 0 0 5px #082d30,inset 0 0 0 6px rgba(212,175,55,.6);}
-.hamper:nth-child(3) .hamper-emblem{width:124px;height:124px;border-radius:50%;border-style:double;border-width:5px;}
-.hamper:nth-child(3):after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='16'%3E%3Cpath d='M0 14Q12 -2 24 14' fill='none' stroke='%23D4AF37' stroke-width='1.2'/%3E%3C/svg%3E");}
-@media (max-width:920px){.hamper:nth-child(2){margin:0;}}
+/* 01: temple-arch top (mandapam doorway) */
+.hamper:nth-child(1){border-radius:160px 160px 14px 14px;padding-top:46px;outline-offset:-10px;}
+.hamper:nth-child(1) .hamper-no:after{content:'';display:block;width:6px;height:6px;margin:8px auto 0;background:var(--gold);transform:rotate(45deg);}
+
+/* 02: sharp rectangle with gold corner brackets, lifted and warmer */
+.hamper:nth-child(2){border-radius:0;margin-top:-16px;margin-bottom:16px;border-color:var(--gold);outline:none;
+  background:linear-gradient(180deg,rgba(242,215,126,.14),rgba(0,0,0,.2));
+  box-shadow:0 24px 44px rgba(0,0,0,.45);}
+.hamper:nth-child(2):before,.hamper:nth-child(2):after{content:'';position:absolute;width:34px;height:34px;pointer-events:none;border:3px solid var(--gold-bright);}
+.hamper:nth-child(2):before{top:-4px;left:-4px;border-right:0;border-bottom:0;}
+.hamper:nth-child(2):after{right:-4px;bottom:-4px;border-left:0;border-top:0;}
+.hamper:nth-child(2) .hamper-no:before,.hamper:nth-child(2) .hamper-no:after{content:'—';margin:0 8px;opacity:.6;}
+
+/* 03: leaf / lotus-petal corners */
+.hamper:nth-child(3){border-radius:54px 10px 54px 10px;outline-offset:-10px;}
+.hamper:nth-child(3) .hamper-emblem:before{border-style:dotted;animation-direction:reverse;}
+.hamper:nth-child(3) .hamper-no:before,.hamper:nth-child(3) .hamper-no:after{content:'✦';margin:0 8px;font-size:10px;opacity:.7;}
 
 @media (max-width:920px){
   .fest-top{grid-template-columns:minmax(0,1fr);gap:28px;margin-bottom:40px;}
   .hamper-row{grid-template-columns:minmax(0,1fr);gap:34px;}
+  .hamper:nth-child(2){margin:0;}
   .fest-copy h2{font-size:30px;}
   .festive{padding:60px 0 64px;}
 }
-@media (prefers-reduced-motion:reduce){.lights i,.flame,.flame-svg,.festive:before{animation:none;}}
+@media (prefers-reduced-motion:reduce){.lights i,.flame,.flame-svg,.festive:before,.hamper-emblem:before{animation:none;}}
