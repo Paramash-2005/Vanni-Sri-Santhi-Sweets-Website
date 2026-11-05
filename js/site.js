@@ -377,6 +377,9 @@ function setPayButtonBusy(busy){
   if(!busy) btn.innerHTML = `${icon('grid',15)} Pay Securely`;
 }
 async function startRazorpayCheckout(){
+  if(typeof Razorpay === 'undefined'){
+    await new Promise(res=>{ const sc=document.createElement('script'); sc.src='https://checkout.razorpay.com/v1/checkout.js'; sc.onload=sc.onerror=res; document.head.appendChild(sc); });
+  }
   if(typeof Razorpay === 'undefined'){ showToast('Payment gateway failed to load. Please refresh and try again.'); return; }
   setPayButtonBusy(true);
   const amount = cartTotal();

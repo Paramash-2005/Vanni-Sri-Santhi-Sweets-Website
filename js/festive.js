@@ -48,7 +48,8 @@
   const hero = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const COLORS = ['255,214,102', '255,140,66', '255,99,132', '255,245,214', '120,220,255', '170,255,160'];
-  const MAX_SPARKS = 320;
+  const COARSE = window.matchMedia('(pointer: coarse)').matches;
+  const MAX_SPARKS = COARSE ? 140 : 320;
   let w = 0, h = 0, rockets = [], sparks = [], raf = 0, visible = true, nextLaunch = 0;
 
   function resize() {
@@ -71,7 +72,7 @@
   }
 
   function burst(x, y, color) {
-    const count = 36 + ((Math.random() * 26) | 0);
+    const count = (COARSE ? 24 : 36) + ((Math.random() * 20) | 0);
     const ring = Math.random() < 0.4; // some bursts are clean rings
     const alt = COLORS[(Math.random() * COLORS.length) | 0];
     for (let i = 0; i < count; i++) {
@@ -138,7 +139,7 @@
   function schedule() { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame); }
 
   new IntersectionObserver((e) => {
-    visible = e[0].isIntersecting;
+    visible = e[0].isIntersecting; hero.classList.toggle('off', !visible);
     if (visible) schedule(); else { cancelAnimationFrame(raf); raf = 0; }
   }).observe(hero);
   document.addEventListener('visibilitychange', () => {
