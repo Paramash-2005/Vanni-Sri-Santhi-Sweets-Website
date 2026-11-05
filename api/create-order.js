@@ -21,6 +21,7 @@
 
 import { list } from '@vercel/blob';
 import { blobToken } from '../lib/blob-token.js';
+import { normalizePhone } from '../lib/whatsapp.js';
 
 const ALLOWED_WEIGHTS = [250, 500, 1000];
 const MAX_LINES = 50;
@@ -33,6 +34,12 @@ const DEFAULT_PRICES = {
   jilebi: 380, milksweet: 500, badhusha: 400,
   mixture: 320, muruku: 340, spmixture: 360, pakoda: 300, thattai: 320,
   sev: 300, andhramuruku: 340
+};
+
+const DEFAULT_NAMES = {
+  halwa: 'Tirunelveli Halwa', balcova: 'Balcova', mysorepak: 'Mysorepak', jangiri: 'Jangiri', laddoo: 'Laddoo',
+  jilebi: 'Jilebi', milksweet: 'Milk Sweet', badhusha: 'Badhusha', mixture: 'Mixture', muruku: 'Muruku',
+  spmixture: 'Special Mixture', pakoda: 'Pakoda', thattai: 'Thattai', sev: 'Sev', andhramuruku: 'Andhra Muruku'
 };
 
 const DEFAULT_CATEGORY = {
@@ -54,7 +61,7 @@ async function loadPrices() {
     const result = {};
     for (const key of ['sweets', 'savouries']) {
       if (Array.isArray(data[key]) && data[key].length) {
-        for (const it of data[key]) result[it.id] = Number(it.price);
+        for (const it of data[key]) { result[it.id] = Number(it.price); if (it.en) DEFAULT_NAMES[it.id] = String(it.en); }
       } else {
         for (const id of DEFAULT_CATEGORY[key]) result[id] = DEFAULT_PRICES[id];
       }
@@ -72,6 +79,7 @@ async function priceCart(items) {
   }
   const prices = await loadPrices();
   let total = 0;
+  const lines = [];
   for (const line of items) {
     const perKg = prices[line && line.id];
     const weightG = Number(line && line.weightG);
@@ -87,8 +95,9 @@ async function priceCart(items) {
     }
     // Same rounding as packPrice() in js/site.js
     total += Math.round(perKg * weightG / 1000) * packs;
+    lines.push(`${packs} x ${DEFAULT_NAMES[line.id] || line.id} ${weightG >= 1000 ? '1kg' : weightG + 'g'}`);
   }
-  return total;
+  return { total, summary: lines.join(', ') };
 }
 
 export default async function handler(req, res) {
@@ -102,13 +111,13 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Payment gateway is not configured yet. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Vercel.' });
   }
 
-  const { items, receipt } = req.body || {};
+  const { items, receipt, customer } = req.body || {};
 
   // The total is computed HERE from server-side prices. The browser's own
   // total is never trusted, so a tampered request can't underpay.
-  let amountInRupees;
+  let amountInRupees, summary;
   try {
-    amountInRupees = await priceCart(items);
+    ({ total: amountInRupees, summary } = await priceCart(items));
   } catch (e) {
     return res.status(e.status || 400).json({ error: e.message || 'Invalid order' });
   }
@@ -125,7 +134,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         amount: amountInPaise,
         currency: 'INR',
-        receipt: String(receipt || `VSS${Date.now()}`).slice(0, 40)
+        receipt: String(receipt || `VSS${Date.now()}`).slice(0, 40),
+        // Kept on the Razorpay order so verify-payment can message the customer from SERVER-held data,
+        // never from values the browser sends after payment.
+        notes: {
+          cust_name: String((customer && customer.name) || '').slice(0, 60),
+          cust_phone: normalizePhone(customer && customer.phone) || '',
+          items: summary.length > 250 ? summary.slice(0, 247) + '...' : summary
+        }
       })
     });
 

@@ -339,6 +339,7 @@ function renderDrawer(){
         <div style="font-size:10.5px;color:var(--ink-soft);margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;">
           Billed to: ${o.customer.name} · ${o.customer.phone}<br>${o.customer.address}
         </div>
+        ${o.whatsapp==='sent' ? `<div style="font-size:11.5px;color:#2e7d32;margin-top:10px;font-weight:600;">${icon('whatsapp',13)} Order confirmation sent to your WhatsApp (${o.customer.phone}).</div>` : ''}
       </div>`;
     foot.innerHTML = `
       <div style="display:flex;gap:8px;">
@@ -383,6 +384,7 @@ async function startRazorpayCheckout(){
   if(typeof Razorpay === 'undefined'){ showToast('Payment gateway failed to load. Please refresh and try again.'); return; }
   setPayButtonBusy(true);
   const amount = cartTotal();
+  const orderRef = 'VSS' + Math.floor(1000 + Math.random()*9000); // shown to the customer AND used as the receipt id in the WhatsApp message
   let orderData;
   try{
     const orderRes = await fetch('/api/create-order', {
@@ -390,7 +392,8 @@ async function startRazorpayCheckout(){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         items: state.cart.map(l=>({ id:l.id, weightG:l.weightG, packs:l.packs })),
-        receipt: 'VSS' + Date.now()
+        receipt: orderRef,
+        customer: { name: state.customer.name, phone: state.customer.phone }
       })
     });
     orderData = await orderRes.json();
@@ -414,7 +417,7 @@ async function startRazorpayCheckout(){
     description: 'Order at ' + SHOP_NAME_FOR_UPI,
     prefill: { name: state.customer.name, contact: state.customer.phone },
     theme: { color: '#8a1c2b' },
-    handler: function(response){ verifyAndCompleteOrder(response); },
+    handler: function(response){ verifyAndCompleteOrder(response, orderRef); },
     modal: { ondismiss: function(){ setPayButtonBusy(false); } }
   });
   rzp.on('payment.failed', function(resp){
@@ -423,7 +426,8 @@ async function startRazorpayCheckout(){
   });
   rzp.open();
 }
-async function verifyAndCompleteOrder(response){
+async function verifyAndCompleteOrder(response, orderRef){
+  let waStatus = 'off';
   try{
     const verifyRes = await fetch('/api/verify-payment', {
       method:'POST',
@@ -440,19 +444,21 @@ async function verifyAndCompleteOrder(response){
       setPayButtonBusy(false);
       return;
     }
+    waStatus = verifyData.whatsapp || 'off';
   }catch(err){
     showToast('We could not verify your payment. Please contact us with payment ID: ' + response.razorpay_payment_id);
     setPayButtonBusy(false);
     return;
   }
-  const id = 'VSS' + Math.floor(1000 + Math.random()*9000);
+  const id = orderRef;
   const order = {
     id, date: new Date().toLocaleString('en-IN'),
     customer: state.customer,
     items: state.cart.map(l=>({ id:l.id, name:findItem(l.id).en, weightG:l.weightG, packs:l.packs, price:findItem(l.id).price })),
     total: cartTotal(),
     status: 'paid',
-    paymentId: response.razorpay_payment_id
+    paymentId: response.razorpay_payment_id,
+    whatsapp: waStatus
   };
   saveOrder(order);
   state.lastOrder = order;

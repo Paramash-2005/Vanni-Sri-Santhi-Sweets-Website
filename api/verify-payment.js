@@ -11,6 +11,7 @@
 // -----------------------------------------------------------------------
 
 import crypto from 'crypto';
+import { whatsappConfigured, sendOrderWhatsapp } from '../lib/whatsapp.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -32,6 +33,33 @@ export default async function handler(req, res) {
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest('hex');
 
-  const verified = expectedSignature === razorpay_signature;
-  return res.status(200).json({ verified });
+  const a = Buffer.from(expectedSignature), b = Buffer.from(String(razorpay_signature));
+  const verified = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (!verified) return res.status(200).json({ verified: false });
+
+  // Payment is genuine -> send the confirmation once, using the details stored at order creation.
+  let whatsapp = 'off';
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  if (whatsappConfigured() && keyId) {
+    try {
+      const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+      const url = `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpay_order_id)}`;
+      const o = await (await fetch(url, { headers: { Authorization: auth } })).json();
+      const n = o.notes || {};
+      if (n.wa_sent) {
+        whatsapp = 'sent';
+      } else if (n.cust_phone) {
+        const r = await sendOrderWhatsapp({ phone: n.cust_phone, name: n.cust_name, orderId: o.receipt, items: n.items, total: Math.round((o.amount || 0) / 100) });
+        whatsapp = r.sent ? 'sent' : 'failed';
+        if (r.sent) {
+          // idempotency: a replayed request can't message the customer twice
+          await fetch(url, {
+            method: 'PATCH', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: { ...n, wa_sent: '1' } })
+          }).catch(() => {});
+        }
+      } else { whatsapp = 'failed'; }
+    } catch (e) { console.error('order whatsapp error:', e); whatsapp = 'failed'; }
+  }
+  return res.status(200).json({ verified: true, whatsapp });
 }
