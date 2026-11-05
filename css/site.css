@@ -233,6 +233,13 @@ html,body{overflow-x:clip;}
   .drawer,.chat-drawer{width:100%;max-width:100%;right:-105%;height:100vh;height:100dvh;}
   .drawer-body,.chat-drawer{padding-bottom:env(safe-area-inset-bottom,0px);}
   .chat-fab{bottom:calc(16px + env(safe-area-inset-bottom,0px));right:16px;}
+  .prod-card{display:flex;flex-direction:column;}
+  .prod-body{flex:1;display:flex;flex-direction:column;}
+  .prod-actions{margin-top:auto;padding-top:12px;}
+  .prod-actions{flex-direction:column;align-items:stretch;gap:8px;}
+  .qty-stepper{justify-content:space-between;}
+  .qty-stepper button{flex:1;}
+  .btn-add{flex:none;width:100%;min-height:40px;white-space:nowrap;}
 }
 @media (hover:none) and (pointer:coarse){
   .qty-stepper button{width:40px;height:40px;}
