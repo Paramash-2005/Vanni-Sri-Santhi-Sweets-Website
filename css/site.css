@@ -37,10 +37,11 @@ header{background:var(--card);border-bottom:2px solid var(--gold);position:stick
 nav.mainnav{display:flex;gap:30px;}
 nav.mainnav a{font-size:13.5px;font-weight:600;color:var(--ink);padding:6px 0;border-bottom:2px solid transparent;transition:.15s;}
 nav.mainnav a:hover{color:var(--maroon);border-color:var(--gold);}
-.header-actions{display:flex;align-items:center;gap:16px;}
-.icon-btn{background:none;border:none;color:var(--maroon);position:relative;display:flex;align-items:center;}
-.icon-btn svg{width:21px;height:21px;}
-.cart-count{position:absolute;top:-7px;right:-9px;background:var(--maroon);color:var(--gold-bright);font-size:10px;font-weight:800;border-radius:999px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-shrink:0;}
+.icon-btn{background:none;border:none;color:var(--maroon);position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;margin:0;line-height:0;cursor:pointer;}
+.icon-btn > span:not(.cart-count){display:flex;align-items:center;justify-content:center;width:22px;height:22px;}
+.icon-btn svg{width:22px;height:22px;display:block;flex:none;}
+.cart-count{position:absolute;top:2px;right:0;line-height:1;background:var(--maroon);color:var(--gold-bright);font-size:10px;font-weight:800;border-radius:999px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
 .burger{display:none;background:none;border:none;color:var(--maroon);}
 .mobile-nav{display:none;flex-direction:column;background:var(--card);border-top:1px solid var(--line);padding:4px 28px 10px;}
 .mobile-nav.show{display:flex;}

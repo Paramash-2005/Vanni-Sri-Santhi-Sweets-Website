@@ -41,9 +41,9 @@ function closeMobileMenu(){
   btn.setAttribute('aria-expanded','false');
   btn.setAttribute('aria-label','Open menu');
 }
-document.querySelectorAll('.icon-btn')[0].innerHTML = icon('phone',20);
-document.getElementById('cartIconWrap').innerHTML = icon('cart',21);
-document.getElementById('acctIconWrap').innerHTML = icon('user',20);
+document.querySelectorAll('.icon-btn')[0].innerHTML = icon('phone',22);
+document.getElementById('cartIconWrap').innerHTML = icon('cart',22);
+document.getElementById('acctIconWrap').innerHTML = icon('user',22);
 document.querySelectorAll('.close-x').forEach(el=>el.innerHTML = icon('x',20));
 
 /* ---------- DATA ---------- */
