@@ -227,7 +227,10 @@ function renderTrust(){
 function renderProducts(){
   // Items marked Best (admin) are listed first; the sort is stable so the rest keep their order.
   const list = (state.tab==='sweets'?SWEETS:SAVOURIES).slice().sort((a,b)=>(b.best?1:0)-(a.best?1:0));
-  document.getElementById('prodGrid').innerHTML = list.map((it,idx)=>{
+  const grid = document.getElementById('prodGrid');
+  grid.classList.toggle('static', !!grid.dataset.done); // animate cards in only on the very first render
+  grid.dataset.done = '1';
+  grid.innerHTML = list.map((it,idx)=>{
     const g = state.weight[it.id]||DEFAULT_WEIGHT;
     return `
     <div class="prod-card" data-id="${it.id}" style="animation-delay:${idx*0.06}s">
@@ -572,10 +575,20 @@ function sendQuery(){
 function renderSitePhotos(){
   ['hero','bulk','story'].forEach(key=>{
     const el = document.getElementById(key+'PhotoSlot');
-    if(el) el.innerHTML = photoFill(key);
+    if(!el) return;
+    const html = photoFill(key);
+    if(el.dataset.sig === html) return; // same photo: don't re-insert (avoids reload flicker)
+    el.dataset.sig = html;
+    el.innerHTML = html;
   });
 }
-function renderAll(){ renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderShopLinks(); renderDrawer(); }
+let renderedOnce = false;
+function renderAll(){
+  renderCategories(); renderTrust(); renderProducts(); renderSitePhotos(); renderShopLinks(); renderDrawer();
+  // After the first paint, a data refresh must not fade everything in again.
+  if(window.vannaiReveal) window.vannaiReveal(renderedOnce);
+  renderedOnce = true;
+}
 loadSharedData();
 renderAll();
 // Cloud copy (saved from admin) is what every customer should see; it overrides any local copy.

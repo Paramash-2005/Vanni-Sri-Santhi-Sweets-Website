@@ -313,7 +313,47 @@ function addItem(){
 /* ---- Photo editor: crop shape, drag-to-position, zoom, rotate, brightness, contrast ---- */
 const ED = {img:null, url:null, key:'', aspect:'1.5', zoom:1, rot:0, ox:0, oy:0, drag:null};
 const ED_PREVIEW_W = 360;
-function edDefaultAspect(key){ return key==='logo' ? '1' : '1.5'; }
+/* How each photo is actually shown on the website (measured from the live layout).
+   aspect = desktop width/height of the frame, phone = the near-square crop phones show. */
+const ED_FRAMES = {
+  logo:  {aspect:1,    shape:'circle', phone:1,    name:'Logo (shown as a circle)'},
+  hero:  {aspect:1.5,  shape:'arch',   phone:1,    name:'Hero banner (arch)'},
+  story: {aspect:1.6,  shape:'arch',   phone:1,    name:'Our Story (arch)'},
+  bulk:  {aspect:2,    shape:'arch',   phone:1,    name:'Bulk banner (arch)'},
+  cat:   {aspect:1.9,  shape:'rect',   phone:1.05, name:'Category tile'},
+  prod:  {aspect:1.55, shape:'rect',   phone:0.9,  name:'Product photo'}
+};
+function edFrame(key){
+  if(ED_FRAMES[key] && key!=='cat' && key!=='prod') return ED_FRAMES[key];
+  return String(key).indexOf('cat_')===0 ? ED_FRAMES.cat : ED_FRAMES.prod;
+}
+function edShapePath(ctx,W,H,shape){
+  if(shape==='circle'){ ctx.moveTo(W/2+Math.min(W,H)/2,H/2); ctx.arc(W/2,H/2,Math.min(W,H)/2,0,Math.PI*2); return; }
+  if(shape==='arch'){ // same curve as the website's .arch frame: 50% / 26% top corners, small bottom corners
+    const r=5;
+    ctx.moveTo(0,0.26*H); ctx.ellipse(W/2,0.26*H,W/2,0.26*H,0,Math.PI,Math.PI*2);
+    ctx.lineTo(W,H-r); ctx.arcTo(W,H,W-r,H,r); ctx.lineTo(r,H); ctx.arcTo(0,H,0,H-r,r); ctx.closePath(); return;
+  }
+  const c=12; // product / category cards: rounded top corners
+  ctx.moveTo(0,H); ctx.lineTo(0,c); ctx.arcTo(0,0,c,0,c); ctx.lineTo(W-c,0); ctx.arcTo(W,0,W,c,c); ctx.lineTo(W,H); ctx.closePath();
+}
+function edOverlay(ctx,W,H){
+  const g = document.getElementById('edGuide');
+  if(ED.aspect!=='site' || (g && !g.checked)) return;
+  const f = edFrame(ED.key);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0,0,W,H); edShapePath(ctx,W,H,f.shape);
+  ctx.fillStyle='rgba(30,8,14,.58)'; ctx.fill('evenodd'); // shaded = cut off on the website
+  ctx.beginPath(); edShapePath(ctx,W,H,f.shape);
+  ctx.strokeStyle='#D4AF37'; ctx.lineWidth=2; ctx.stroke();
+  const pw=Math.min(W,H*f.phone), ph=pw/f.phone; // area phones show (centred)
+  if(pw<W-2 || ph<H-2){
+    ctx.setLineDash([6,4]); ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=1.5;
+    ctx.strokeRect((W-pw)/2,(H-ph)/2,pw,ph);
+  }
+  ctx.restore();
+}
+function edDefaultAspect(key){ return 'site'; }
 function edOpenFile(file,key){
   const url = URL.createObjectURL(file);
   const img = new Image();
@@ -354,6 +394,7 @@ function edDims(){
   return {iw: odd ? ED.img.height : ED.img.width, ih: odd ? ED.img.width : ED.img.height};
 }
 function edAspectValue(){
+  if(ED.aspect === 'site') return edFrame(ED.key).aspect;
   if(ED.aspect === 'orig'){ const d = edDims(); return d.iw / d.ih; }
   return parseFloat(ED.aspect) || 1;
 }
@@ -397,7 +438,11 @@ function edRender(){
   const H = a>=1 ? Math.round(ED_PREVIEW_W/a) : ED_PREVIEW_W;
   const cv = document.getElementById('edCanvas');
   cv.width = W; cv.height = H;
-  edDraw(cv.getContext('2d'), W, H);
+  const ctx = cv.getContext('2d');
+  edDraw(ctx, W, H);
+  edOverlay(ctx, W, H); // preview only; the saved photo never includes the guide
+  const lbl = document.getElementById('edFrameName');
+  if(lbl) lbl.textContent = ED.aspect==='site' ? edFrame(ED.key).name : 'Free shape';
 }
 function edChange(){ ED.zoom = Number(document.getElementById('edZoom').value) || 1; edRender(); }
 function edSetAspect(v){ ED.aspect = v; ED.ox = 0; ED.oy = 0; edRender(); }

@@ -97,11 +97,12 @@
   <div class="ed-box">
     <h3>Edit photo</h3>
     <div class="ed-stage"><canvas id="edCanvas"></canvas></div>
-    <div class="ed-hint">Drag the photo to position it. Whatever you see in the frame is what gets saved.</div>
+    <div class="ed-hint"><b id="edFrameName"></b> · Drag the photo to position it. <span class="ed-key ed-key-shade">Shaded</span> = hidden on the website, <span class="ed-key ed-key-dash">dashed box</span> = what phones show.</div>
+    <label class="ed-check"><input type="checkbox" id="edGuide" checked onchange="edRender()"> Show how it will look on my website</label>
     <div class="ed-controls">
       <label>Shape
         <select id="edAspect" onchange="edSetAspect(this.value)">
-          <option value="orig">Original</option><option value="1">Square 1:1</option><option value="1.5">Wide 3:2</option>
+          <option value="site">Fit my website frame (recommended)</option><option value="orig">Original</option><option value="1">Square 1:1</option><option value="1.5">Wide 3:2</option>
           <option value="1.3333">Classic 4:3</option><option value="1.7778">Banner 16:9</option><option value="0.75">Portrait 3:4</option>
         </select></label>
       <label>Zoom <input type="range" id="edZoom" min="1" max="3" step="0.01" value="1" oninput="edChange()"></label>

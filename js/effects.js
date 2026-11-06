@@ -1,43 +1,51 @@
-// effects.js — smooth scroll, scroll-triggered reveals, marquee, card tilt, cursor sparkle.
-// Loaded after Lenis + GSAP + ScrollTrigger from CDN, and after site.js has rendered content.
+// effects.js — scroll-triggered reveals, count-up, marquee, card tilt, cursor sparkle.
+// No external libraries: ONE IntersectionObserver handles every reveal and count-up.
 // Fireworks / countdown live in festive.js.
 
 (function () {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
 
-  // ---------- Lenis smooth scroll (driven ONLY by the GSAP ticker — one raf per frame) ----------
-  let lenis = null;
-  if (!prefersReducedMotion && !isTouch && window.Lenis) {
-    lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+  // ---------- Reveals + count-up ----------
+  // observeReveals(instant): call after any re-render (site.js does). With instant=true the
+  // new elements appear immediately with no fade, so a data refresh never makes cards flash or vanish.
+  const hasIO = 'IntersectionObserver' in window;
+  function countUp(el, instant) {
+    const target = parseInt(el.dataset.countup, 10) || 0;
+    const suffix = el.dataset.suffix || '';
+    el.dataset.countDone = '1';
+    if (instant || prefersReducedMotion) { el.textContent = target + suffix; return; }
+    const t0 = performance.now(), dur = 1400;
+    (function step(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
   }
+  const io = hasIO ? new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      io.unobserve(el);
+      if (el.classList.contains('reveal')) el.classList.add('revealed');
+      if (el.hasAttribute('data-countup') && !el.dataset.countDone) countUp(el, false);
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.01 }) : null;
 
-  // ---------- GSAP + ScrollTrigger ----------
-  if (window.gsap && window.ScrollTrigger) {
-    gsap.registerPlugin(ScrollTrigger);
-    if (lenis) {
-      lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add((time) => { lenis.raf(time * 1000); });
-      gsap.ticker.lagSmoothing(0);
-    }
-
-    function initReveals() {
-      document.querySelectorAll('.reveal').forEach((el) => {
-        if (el.dataset.revealBound) return;
-        el.dataset.revealBound = '1';
-        ScrollTrigger.create({
-          trigger: el, start: 'top 90%', once: true,
-          onEnter: () => el.classList.add('revealed'),
-        });
-      });
-    }
-    initReveals();
-    setTimeout(initReveals, 300);
-    setTimeout(initReveals, 1000);
-  } else {
-    // CDN blocked/failed: never leave content invisible
-    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('revealed'));
+  function observeReveals(instant) {
+    document.querySelectorAll('.reveal:not(.revealed), [data-countup]:not([data-count-done])').forEach((el) => {
+      if (instant || !io) {
+        if (el.classList.contains('reveal')) el.classList.add('revealed');
+        if (el.hasAttribute('data-countup') && !el.dataset.countDone) countUp(el, true);
+        return;
+      }
+      if (el.dataset.revealBound) return;
+      el.dataset.revealBound = '1';
+      io.observe(el);
+    });
   }
+  window.vannaiReveal = observeReveals;
+  observeReveals(false);
 
   // ---------- Marquee strip ----------
   const marqueeTrack = document.getElementById('marqueeTrack');
@@ -79,43 +87,16 @@
     }, true);
   }
 
-  // ---------- Count-up for the "years in business" trust badge ----------
-  function initCountUps() {
-    document.querySelectorAll('[data-countup]').forEach((el) => {
-      if (el.dataset.countBound) return;
-      el.dataset.countBound = '1';
-      const target = parseInt(el.dataset.countup, 10) || 0;
-      const suffix = el.dataset.suffix || '';
-      if (window.gsap && window.ScrollTrigger) {
-        ScrollTrigger.create({
-          trigger: el, start: 'top 90%', once: true,
-          onEnter: () => {
-            const obj = { val: 0 };
-            gsap.to(obj, {
-              val: target, duration: 1.4, ease: 'power2.out',
-              onUpdate: () => { el.textContent = Math.round(obj.val) + suffix; },
-            });
-          },
-        });
-      } else {
-        el.textContent = target + suffix;
-      }
-    });
-  }
-  initCountUps();
-  setTimeout(initCountUps, 400);
-  setTimeout(initCountUps, 1200);
-
-  // ---------- Cursor sparkle trail (desktop only; loop sleeps when no sparks) ----------
+  // ---------- Cursor sparkle trail (desktop only; canvas is hidden and loop sleeps when idle) ----------
   if (!isTouch && !prefersReducedMotion) {
     const cv = document.createElement('canvas');
     cv.id = 'sparkleCanvas';
+    cv.style.display = 'none'; // a full-screen layer only exists while sparks are visible
     document.body.appendChild(cv);
     const ctx = cv.getContext('2d');
-    let sw, sh, sparks = [], lastSpark = 0, running = false;
+    let sw = 0, sh = 0, sparks = [], lastSpark = 0, running = false;
     function resize() { sw = cv.width = window.innerWidth; sh = cv.height = window.innerHeight; }
-    resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', () => { if (running) resize(); });
 
     function tick() {
       ctx.clearRect(0, 0, sw, sh);
@@ -129,7 +110,7 @@
       }
       sparks = sparks.filter((p) => p.life < p.maxLife);
       if (sparks.length) requestAnimationFrame(tick);
-      else { running = false; ctx.clearRect(0, 0, sw, sh); }
+      else { running = false; ctx.clearRect(0, 0, sw, sh); cv.style.display = 'none'; }
     }
     document.addEventListener('mousemove', (e) => {
       const now = performance.now();
@@ -137,7 +118,7 @@
       lastSpark = now;
       sparks.push({ x: e.clientX, y: e.clientY, r: 1.5 + Math.random() * 2, life: 0, maxLife: 30 });
       if (sparks.length > 40) sparks.shift();
-      if (!running) { running = true; requestAnimationFrame(tick); }
+      if (!running) { running = true; resize(); cv.style.display = 'block'; requestAnimationFrame(tick); }
     }, { passive: true });
   }
 })();

@@ -259,3 +259,4 @@ html{scroll-behavior:smooth;}@media (prefers-reduced-motion:reduce){html{scroll-
 /* ---- Admin-controlled announcement banner + sold-out tag ---- */
 .announce-bar{background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-deep));color:var(--maroon-deep);text-align:center;font-weight:700;font-size:13px;line-height:1.4;padding:8px 16px;}
 .tag-sold{position:absolute;top:12px;left:12px;background:#4a4a4a;color:#fff;font-size:9.5px;font-weight:800;padding:4px 9px;border-radius:6px;z-index:2;letter-spacing:.3px;}
+.prod-grid.static .prod-card{animation:none;}
