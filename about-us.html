@@ -12,7 +12,7 @@
 <body>
 <header><div class="wrap"><a class="brand" href="index.html">Vannai Sri Santhi</a><a class="back" href="index.html">← Back to Shop</a></div></header>
 <main class="wrap">
-  <img src="assets/logo.png" alt="Vannai Sri Santhi Sweets & Bakery" style="width:120px;height:120px;border-radius:50%;margin-bottom:20px;box-shadow:0 8px 20px rgba(46,7,19,0.25);">
+  <img src="assets/logo.png" data-logo alt="Vannai Sri Santhi Sweets & Bakery" style="width:120px;height:120px;border-radius:50%;margin-bottom:20px;box-shadow:0 8px 20px rgba(46,7,19,0.25);">
   <div class="eyebrow">Our Story</div>
   <h1>Two Decades of Tirunelveli's Own Sweets</h1>
   <p>Vannai Sri Santhi Sweets &amp; Bakery has been a fixture on Tirunelveli's sweet counters since 2004. What began as a small family kitchen has grown into a name locals trust for one simple reason — everything we sell, we make ourselves.</p>
@@ -22,5 +22,11 @@
   <p>Tirunelveli, Tamil Nadu · Open daily, 8:00 AM – 9:30 PM · <a href="tel:+919443555772" style="color:var(--maroon);font-weight:600;">+91 94435 55772</a></p>
 </main>
 <footer>© 2026 Vannai Sri Santhi Sweets &amp; Bakery. All Rights Reserved.</footer>
+<script>
+fetch('/api/shop-data').then(r=>r.ok?r.json():null).then(d=>{
+  const u=d&&d.photos&&d.photos.logo;
+  if(typeof u==='string'&&u.startsWith('https://')) document.querySelectorAll('img[data-logo]').forEach(i=>{i.src=u;});
+}).catch(()=>{});
+</script>
 </body>
 </html>

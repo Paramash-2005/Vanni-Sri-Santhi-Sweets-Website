@@ -33,7 +33,13 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('photo merge error (continuing with submitted photos):', err);
   }
-  const clean = { shop: body.shop, sweets: body.sweets, savouries: body.savouries, photos };
+  // Announcement banner: plain text only (the storefront inserts it as text, never HTML).
+  const a = body.announcement || {};
+  const announcement = {
+    on: a.on === true,
+    text: typeof a.text === 'string' ? a.text.slice(0, 200) : '',
+  };
+  const clean = { shop: body.shop, sweets: body.sweets, savouries: body.savouries, photos, announcement };
   const json = JSON.stringify(clean);
   if (json.length > 200 * 1024) return res.status(413).json({ error: 'Data too large' });
   try {

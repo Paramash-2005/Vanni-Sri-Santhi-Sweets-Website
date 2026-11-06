@@ -50,34 +50,35 @@ const DEFAULT_CATEGORY = {
 // Same source of truth the storefront uses: the admin-saved shop-data.json.
 async function loadPrices() {
   const prices = { ...DEFAULT_PRICES };
+  const soldOutIds = new Set(); // ids the admin marked "Sold out"
   const token = blobToken();
-  if (!token) return prices;
+  if (!token) return { prices, soldOutIds };
   try {
     const { blobs } = await list({ prefix: 'shop-data.json', limit: 1, token });
-    if (!blobs.length) return prices;
+    if (!blobs.length) return { prices, soldOutIds };
     const data = await (await fetch(blobs[0].url + '?t=' + Date.now())).json();
     // Mirror the client: a non-empty saved list replaces that category's
     // defaults entirely; an absent/empty one keeps the defaults.
     const result = {};
     for (const key of ['sweets', 'savouries']) {
       if (Array.isArray(data[key]) && data[key].length) {
-        for (const it of data[key]) { result[it.id] = Number(it.price); if (it.en) DEFAULT_NAMES[it.id] = String(it.en); }
+        for (const it of data[key]) { result[it.id] = Number(it.price); if (it.en) DEFAULT_NAMES[it.id] = String(it.en); if (it.soldOut === true) soldOutIds.add(it.id); }
       } else {
         for (const id of DEFAULT_CATEGORY[key]) result[id] = DEFAULT_PRICES[id];
       }
     }
-    return result;
+    return { prices: result, soldOutIds };
   } catch (err) {
     console.error('create-order price load error:', err);
   }
-  return prices;
+  return { prices, soldOutIds };
 }
 
 async function priceCart(items) {
   if (!Array.isArray(items) || items.length === 0 || items.length > MAX_LINES) {
     throw Object.assign(new Error('Your basket is empty or invalid.'), { status: 400 });
   }
-  const prices = await loadPrices();
+  const { prices, soldOutIds } = await loadPrices();
   let total = 0;
   const lines = [];
   for (const line of items) {
@@ -86,6 +87,9 @@ async function priceCart(items) {
     const packs = Number(line && line.packs);
     if (!Number.isFinite(perKg) || perKg <= 0) {
       throw Object.assign(new Error('An item in your basket is no longer available.'), { status: 400 });
+    }
+    if (soldOutIds.has(line.id)) {
+      throw Object.assign(new Error((DEFAULT_NAMES[line.id] || 'An item') + ' is sold out right now. Please remove it from your basket.'), { status: 400 });
     }
     if (!ALLOWED_WEIGHTS.includes(weightG)) {
       throw Object.assign(new Error('Invalid pack size. Choose 250g, 500g or 1kg.'), { status: 400 });

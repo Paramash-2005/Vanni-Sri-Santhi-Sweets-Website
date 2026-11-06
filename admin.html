@@ -14,7 +14,7 @@
 <header>
   <div class="wrap">
     <div style="display:flex;align-items:center;gap:12px;">
-      <img src="assets/logo.png" alt="Vannai Sri Santhi" style="height:44px;width:44px;border-radius:50%;">
+      <img src="assets/logo.png" data-logo alt="Vannai Sri Santhi" style="height:44px;width:44px;border-radius:50%;">
       <div>
         <h1>Shop Admin</h1>
         <div class="sub">Vannai Sri Santhi Sweets &amp; Bakery — editable dashboard</div>
@@ -40,6 +40,27 @@
     <div class="field"><label>WhatsApp Number (footer &amp; "Enquire Now")</label><input type="text" id="fWhatsapp" placeholder="+91 94435 55772"></div>
     <div class="field"><label>Instagram URL</label><input type="text" id="fInstagram" placeholder="https://instagram.com/yourshop"></div>
   </div>
+</div>
+
+<div class="section">
+  <h2>Logo</h2>
+  <div class="desc">Shown in the header, footer and About page of your customer site. Square images look best (it is displayed as a circle).</div>
+  <div class="logo-row">
+    <img id="logoPreview" class="logo-preview" src="assets/logo.png" alt="Current logo">
+    <div class="logo-actions">
+      <label class="btn-soft">Change logo<input type="file" accept="image/*" hidden onchange="handlePhoto(event,'logo')"></label>
+      <button type="button" class="btn-soft" onclick="editExisting('logo')">Edit current logo</button>
+      <button type="button" class="btn-soft" id="logoRestoreBtn" onclick="restoreLogo()" hidden>Restore previous logo</button>
+      <div class="hint">After changing, press "Save All Changes" to publish. Browser-tab icons are separate files.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Announcement Banner</h2>
+  <div class="desc">A message across the top of your customer site, e.g. "Closed Sunday" or "Diwali orders close Nov 10".</div>
+  <div class="field"><label>Message (max 200 characters)</label><input type="text" id="fAnnounceText" maxlength="200" placeholder="Diwali orders close on Nov 10"></div>
+  <label class="best-toggle" style="justify-content:flex-start;margin-top:10px;font-size:12.5px;"><input type="checkbox" id="fAnnounceOn"> Show the banner on my site</label>
 </div>
 
 <div class="section">
@@ -71,6 +92,33 @@
   <span class="save-status" id="saveStatus"></span>
 </div>
 <div id="toastHost"></div>
+
+<div class="ed-backdrop" id="edModal" role="dialog" aria-modal="true" aria-label="Edit photo" hidden>
+  <div class="ed-box">
+    <h3>Edit photo</h3>
+    <div class="ed-stage"><canvas id="edCanvas"></canvas></div>
+    <div class="ed-hint">Drag the photo to position it. Whatever you see in the frame is what gets saved.</div>
+    <div class="ed-controls">
+      <label>Shape
+        <select id="edAspect" onchange="edSetAspect(this.value)">
+          <option value="orig">Original</option><option value="1">Square 1:1</option><option value="1.5">Wide 3:2</option>
+          <option value="1.3333">Classic 4:3</option><option value="1.7778">Banner 16:9</option><option value="0.75">Portrait 3:4</option>
+        </select></label>
+      <label>Zoom <input type="range" id="edZoom" min="1" max="3" step="0.01" value="1" oninput="edChange()"></label>
+      <label>Brightness <input type="range" id="edBright" min="-60" max="60" step="1" value="0" oninput="edChange()"></label>
+      <label>Contrast <input type="range" id="edContrast" min="-60" max="60" step="1" value="0" oninput="edChange()"></label>
+      <div class="ed-btnrow">
+        <button type="button" class="btn-soft" onclick="edRotate(-1)">⟲ Rotate left</button>
+        <button type="button" class="btn-soft" onclick="edRotate(1)">⟳ Rotate right</button>
+        <button type="button" class="btn-soft" onclick="edReset()">Reset</button>
+      </div>
+    </div>
+    <div class="ed-actions">
+      <button type="button" class="btn-soft" onclick="edClose()">Cancel</button>
+      <button type="button" class="btn-save" onclick="edApply()">Use this photo</button>
+    </div>
+  </div>
+</div>
 <div id="billPrintArea"></div>
 
 <script src="js/admin.js"></script>

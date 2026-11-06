@@ -33,7 +33,8 @@ let data = {
   shop:{city:'Tirunelveli, Tamil Nadu', phone:'+91 94435 55772', hours:'Open daily · 8:00 AM – 9:30 PM', since:'2004', upi:'balasweetparamash-1@okaxis', nameEn:'Vannai Sri Santhi Sweets & Bakery', whatsapp:'+91 94435 55772', instagram:'https://www.instagram.com/vannai_sri_santhi_sweets'},
   sweets: JSON.parse(JSON.stringify(DEFAULT_SWEETS)),
   savouries: JSON.parse(JSON.stringify(DEFAULT_SAVOURIES)),
-  photos:{}
+  photos:{},
+  announcement:{on:false, text:''}
 };
 let tab='sweets';
 const ORDERS_KEY = 'vss_orders';
@@ -154,6 +155,7 @@ async function saveAll(){
   data.shop.upi = document.getElementById('fUpi').value || data.shop.upi;
   data.shop.whatsapp = document.getElementById('fWhatsapp').value || data.shop.whatsapp;
   data.shop.instagram = document.getElementById('fInstagram').value || data.shop.instagram;
+  data.announcement = {on: document.getElementById('fAnnounceOn').checked, text: document.getElementById('fAnnounceText').value.trim().slice(0,200)};
   let serverOk = true, serverErr = '';
   try{ await saveToServer(); }catch(e){ serverOk = false; serverErr = e.message; }
   // Local copy: photos that live in cloud storage are just short URLs, so this stays small.
@@ -177,6 +179,9 @@ function fillShopForm(){
   document.getElementById('fUpi').value = data.shop.upi || '';
   document.getElementById('fWhatsapp').value = data.shop.whatsapp || '';
   document.getElementById('fInstagram').value = data.shop.instagram || '';
+  const an = data.announcement || {};
+  document.getElementById('fAnnounceText').value = an.text || '';
+  document.getElementById('fAnnounceOn').checked = !!an.on;
 }
 function renderPhotoGrid(){
   document.getElementById('photoGrid').innerHTML = PHOTO_SLOTS.map(p=>`
@@ -185,8 +190,9 @@ function renderPhotoGrid(){
         ${data.photos[p.key]?`<img src="${data.photos[p.key]}">`:'📷'}
         <input type="file" accept="image/*" onchange="handlePhoto(event,'${p.key}')">
       </label>
-      <div class="lbl">${p.label}</div>
+      <div class="lbl">${p.label}${data.photos[p.key]?` · <button type="button" class="edit-mini" onclick="editExisting('${p.key}')">Edit</button>`:''}</div>
     </div>`).join('');
+  renderLogo();
 }
 /* ---- Photo storage: compress before saving so localStorage (~5MB) never fills up ---- */
 const PHOTO_MAX_DIM = 1400;         // longest side in px (sharp on phones and desktops)
@@ -236,8 +242,11 @@ function showError(msg){
   host.innerHTML = `<div class="toast" style="background:#b00020;color:#fff;">${msg}</div>`;
   setTimeout(()=>{ host.innerHTML=''; }, 12000);
 }
-async function handlePhoto(e,key){
-  const file=e.target.files[0]; if(!file) return;
+function handlePhoto(e,key){
+  const file=e.target.files[0]; e.target.value=''; if(!file) return;
+  edOpenFile(file,key); // every new photo goes through the editor first
+}
+async function uploadPhoto(file,key){
   let dataUrl;
   try{ dataUrl = await compressImage(file); }
   catch(err){ showToast('Could not read that image (iPhone HEIC files are not supported — use JPG, PNG or WebP).'); return; }
@@ -250,6 +259,7 @@ async function handlePhoto(e,key){
     });
     const j = await r.json();
     if(!r.ok) throw new Error(j.error || 'Upload failed');
+    if(key==='logo' && data.photos.logo && data.photos.logo!==j.url) data.photos.logo_prev = data.photos.logo; // one level of undo
     data.photos[key] = j.url; // public URL in cloud storage (tiny; no browser storage used)
     sessionPhotos[key] = j.url;
     showToast('Photo uploaded. Press "Save All Changes" to publish.');
@@ -269,14 +279,18 @@ function renderItems(){
   const list = currentList();
   document.getElementById('itemsList').innerHTML = list.map((it,idx)=>`
     <div class="item-row">
-      <label class="thumb-upload">
-        ${itemThumb(it.id)}
-        <input type="file" accept="image/*" onchange="handlePhoto(event,'${it.id}')">
-      </label>
+      <div class="thumb-cell">
+        <label class="thumb-upload">
+          ${itemThumb(it.id)}
+          <input type="file" accept="image/*" onchange="handlePhoto(event,'${it.id}')">
+        </label>
+        ${data.photos[it.id]?`<button type="button" class="edit-mini" onclick="editExisting('${it.id}')">Edit</button>`:''}
+      </div>
       <input type="text" value="${it.en}" placeholder="Name (English)" oninput="updateItem(${idx},'en',this.value)">
       <input type="text" value="${it.ta}" placeholder="Name (Tamil)" oninput="updateItem(${idx},'ta',this.value)">
       <input type="number" value="${it.price}" placeholder="₹/kg" oninput="updateItem(${idx},'price',this.value)">
       <label class="best-toggle"><input type="checkbox" ${it.best?'checked':''} onchange="updateItem(${idx},'best',this.checked)"> Best</label>
+      <label class="soldout-toggle"><input type="checkbox" ${it.soldOut?'checked':''} onchange="updateItem(${idx},'soldOut',this.checked)"> Sold out</label>
       <button class="del-btn" onclick="deleteItem(${idx})" title="Remove">✕</button>
     </div>`).join('');
 }
@@ -295,6 +309,149 @@ function addItem(){
   list.push({id:newId, en:'New Item', ta:'', price:0, best:false});
   renderItems();
 }
+
+/* ---- Photo editor: crop shape, drag-to-position, zoom, rotate, brightness, contrast ---- */
+const ED = {img:null, url:null, key:'', aspect:'1.5', zoom:1, rot:0, ox:0, oy:0, drag:null};
+const ED_PREVIEW_W = 360;
+function edDefaultAspect(key){ return key==='logo' ? '1' : '1.5'; }
+function edOpenFile(file,key){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{ edStart(img,key,url); };
+  img.onerror = ()=>{ URL.revokeObjectURL(url); showToast('Could not read that image (iPhone HEIC files are not supported — use JPG, PNG or WebP).'); };
+  img.src = url;
+}
+function editExisting(key){
+  const src = key==='logo' ? (data.photos.logo || 'assets/logo.png') : data.photos[key];
+  if(!src){ showToast('Add a photo first, then you can edit it.'); return; }
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = ()=>edStart(img,key,null);
+  img.onerror = ()=>showError('Could not open that photo for editing. Please upload the photo again instead.');
+  img.src = src;
+}
+function edStart(img,key,url){
+  ED.img = img; ED.url = url; ED.key = key;
+  edReset();
+  document.getElementById('edModal').hidden = false;
+  document.getElementById('edAspect').focus();
+}
+function edReset(){
+  ED.rot = 0; ED.ox = 0; ED.oy = 0; ED.zoom = 1; ED.aspect = edDefaultAspect(ED.key);
+  document.getElementById('edZoom').value = 1;
+  document.getElementById('edBright').value = 0;
+  document.getElementById('edContrast').value = 0;
+  document.getElementById('edAspect').value = ED.aspect;
+  edRender();
+}
+function edClose(){
+  document.getElementById('edModal').hidden = true;
+  if(ED.url) URL.revokeObjectURL(ED.url);
+  ED.img = null; ED.url = null; ED.drag = null;
+}
+function edDims(){
+  const odd = ED.rot % 2 === 1;
+  return {iw: odd ? ED.img.height : ED.img.width, ih: odd ? ED.img.width : ED.img.height};
+}
+function edAspectValue(){
+  if(ED.aspect === 'orig'){ const d = edDims(); return d.iw / d.ih; }
+  return parseFloat(ED.aspect) || 1;
+}
+function edClamp(W,H){
+  const {iw,ih} = edDims();
+  const base = Math.max(W/iw, H/ih) * ED.zoom;
+  const mx = Math.max(0, (iw*base - W)/2) / W, my = Math.max(0, (ih*base - H)/2) / H;
+  ED.ox = Math.min(mx, Math.max(-mx, ED.ox));
+  ED.oy = Math.min(my, Math.max(-my, ED.oy));
+  return base;
+}
+function edDraw(ctx,W,H){
+  const base = edClamp(W,H);
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,W,H);
+  ctx.translate(W/2 + ED.ox*W, H/2 + ED.oy*H);
+  ctx.rotate(ED.rot * Math.PI/2);
+  ctx.scale(base, base);
+  ctx.drawImage(ED.img, -ED.img.width/2, -ED.img.height/2);
+  ctx.restore();
+  edAdjust(ctx,W,H);
+}
+function edAdjust(ctx,W,H){
+  const b = Number(document.getElementById('edBright').value) * 2.55;
+  const c = Number(document.getElementById('edContrast').value) * 2.55;
+  if(!b && !c) return;
+  const f = (259*(c+255)) / (255*(259-c));
+  const im = ctx.getImageData(0,0,W,H), d = im.data;
+  for(let i=0;i<d.length;i+=4){
+    for(let k=0;k<3;k++){
+      const v = f*(d[i+k]-128) + 128 + b;
+      d[i+k] = v<0 ? 0 : v>255 ? 255 : v;
+    }
+  }
+  ctx.putImageData(im,0,0);
+}
+function edRender(){
+  if(!ED.img) return;
+  const a = edAspectValue();
+  const W = a>=1 ? ED_PREVIEW_W : Math.round(ED_PREVIEW_W*a);
+  const H = a>=1 ? Math.round(ED_PREVIEW_W/a) : ED_PREVIEW_W;
+  const cv = document.getElementById('edCanvas');
+  cv.width = W; cv.height = H;
+  edDraw(cv.getContext('2d'), W, H);
+}
+function edChange(){ ED.zoom = Number(document.getElementById('edZoom').value) || 1; edRender(); }
+function edSetAspect(v){ ED.aspect = v; ED.ox = 0; ED.oy = 0; edRender(); }
+function edRotate(d){ ED.rot = (ED.rot + d + 4) % 4; ED.ox = 0; ED.oy = 0; edRender(); }
+function edApply(){
+  if(!ED.img) return;
+  const key = ED.key;
+  const a = edAspectValue();
+  const max = key==='logo' ? 800 : 1400;
+  const W = a>=1 ? max : Math.round(max*a);
+  const H = a>=1 ? Math.round(max/a) : max;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  try{
+    edDraw(cv.getContext('2d'), W, H);
+    cv.toBlob(blob=>{
+      if(!blob){ showError('Could not create the edited photo.'); return; }
+      edClose();
+      uploadPhoto(new File([blob], 'edited.jpg', {type:'image/jpeg'}), key);
+    }, 'image/jpeg', 0.92);
+  }catch(err){
+    showError('Could not export the edited photo: ' + err.message);
+  }
+}
+(function(){
+  const cv = document.getElementById('edCanvas');
+  cv.addEventListener('pointerdown', e=>{ if(!ED.img) return; cv.setPointerCapture(e.pointerId); ED.drag = {x:e.clientX, y:e.clientY, ox:ED.ox, oy:ED.oy}; cv.style.cursor='grabbing'; });
+  cv.addEventListener('pointermove', e=>{
+    if(!ED.drag || !ED.img) return;
+    const r = cv.getBoundingClientRect();
+    ED.ox = ED.drag.ox + (e.clientX - ED.drag.x) / r.width;
+    ED.oy = ED.drag.oy + (e.clientY - ED.drag.y) / r.height;
+    edRender();
+  });
+  const end = ()=>{ ED.drag = null; cv.style.cursor='grab'; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !document.getElementById('edModal').hidden) edClose(); });
+})();
+
+/* ---- Logo ---- */
+function renderLogo(){
+  const cur = data.photos.logo;
+  const img = document.getElementById('logoPreview'); if(img) img.src = cur || 'assets/logo.png';
+  const btn = document.getElementById('logoRestoreBtn'); if(btn) btn.hidden = !data.photos.logo_prev;
+}
+function restoreLogo(){
+  const prev = data.photos.logo_prev; if(!prev) return;
+  data.photos.logo_prev = data.photos.logo || '';
+  data.photos.logo = prev;
+  if(!data.photos.logo_prev) delete data.photos.logo_prev;
+  sessionPhotos.logo = prev;
+  renderLogo();
+  showToast('Previous logo restored. Press "Save All Changes" to publish.');
+}
+
 
 loadData();
 fillShopForm();

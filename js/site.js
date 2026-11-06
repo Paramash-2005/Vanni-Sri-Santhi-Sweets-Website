@@ -94,6 +94,17 @@ function applySharedData(data){
   if(Array.isArray(data.savouries) && data.savouries.length) SAVOURIES = data.savouries;
   rebuildAll();
   if(data.photos) Object.assign(state.photos, data.photos);
+  // Logo changed from admin: swap every logo image on the page.
+  if(data.photos && typeof data.photos.logo==='string' && data.photos.logo.startsWith('https://')){
+    document.querySelectorAll('img[data-logo]').forEach(im=>{ im.src = data.photos.logo; });
+  }
+  // Announcement banner set from admin.
+  const bar = document.getElementById('announceBar');
+  if(bar){
+    const a = data.announcement;
+    if(a && a.on && typeof a.text==='string' && a.text.trim()){ bar.textContent = a.text.trim(); bar.hidden = false; }
+    else bar.hidden = true;
+  }
 }
 
 const CATS = [
@@ -164,11 +175,14 @@ function updateCard(id){
   card.querySelector('[data-role="price"]').innerHTML=`₹${packPrice(it.price,g)} <span class="unit">for ${weightLabel(g)} · ₹${it.price}/kg</span>`;
   card.querySelectorAll('[data-role="pills"] .weight-pill').forEach((b,i)=>b.classList.toggle('active',WEIGHT_OPTIONS[i]===g));
   const add=card.querySelector('[data-role="add"]');
-  add.disabled=q<1; add.style.cssText=q<1?'opacity:.5;cursor:not-allowed;':'';
+  const blocked = q<1 || !!it.soldOut;
+  add.disabled=blocked; add.style.cssText=blocked?'opacity:.5;cursor:not-allowed;':'';
 }
 function changeQty(id,d){ state.qty[id]=Math.max(1,(state.qty[id]||1)+d); updateCard(id); }
 function setWeight(id,g){ state.weight[id]=g; updateCard(id); }
 function addToCart(id){
+  const item = findItem(id);
+  if(item && item.soldOut){ showToast('Sorry, this item is sold out right now'); return; }
   const weightG = state.weight[id]||DEFAULT_WEIGHT;
   const packs = state.qty[id]||1;
   if(packs<1){ showToast('Select a quantity first'); return; }
@@ -217,7 +231,7 @@ function renderProducts(){
     const g = state.weight[it.id]||DEFAULT_WEIGHT;
     return `
     <div class="prod-card" data-id="${it.id}" style="animation-delay:${idx*0.06}s">
-      ${it.best?`<span class="tag-best">Bestseller</span>`:''}
+      ${it.soldOut?`<span class="tag-sold">Sold out</span>`:(it.best?`<span class="tag-best">Bestseller</span>`:'')}
       <div class="photo-slot prod-thumb">${photoFill(it.id)}</div>
       <div class="prod-body">
         <div class="prod-en">${it.en}</div>
@@ -232,7 +246,7 @@ function renderProducts(){
             <div class="val" data-role="qty">${state.qty[it.id]||1}</div>
             <button onclick="changeQty('${it.id}',1)">${icon('plus',12)}</button>
           </div>
-          <button class="btn-add" data-role="add"  onclick="addToCart('${it.id}')">Add to Cart</button>
+          <button class="btn-add" data-role="add" ${it.soldOut?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="addToCart('${it.id}')">${it.soldOut?'Sold Out':'Add to Cart'}</button>
         </div>
       </div>
     </div>`;
